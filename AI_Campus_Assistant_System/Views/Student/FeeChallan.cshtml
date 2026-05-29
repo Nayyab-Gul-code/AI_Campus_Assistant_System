@@ -1,0 +1,764 @@
+@model AI_Campus_Assistant.Models.Fee
+@{
+    Layout = null; // No layout - standalone page for print/download
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Fee Challan — @Model.FeeId</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 16px;
+            min-height: 100vh;
+        }
+
+        /* Action bar (hidden on print) */
+        .action-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 20px;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: #1A6FD4;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: #374151;
+            border: 1.5px solid #E2E8F0;
+        }
+
+        .btn:hover {
+            opacity: .88;
+        }
+
+        /* Challan card */
+        .challan {
+            width: 100%;
+            max-width: 720px;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 40px rgba(0,0,0,.12);
+        }
+
+        /* Header */
+        .challan-header {
+            background: linear-gradient(135deg, #0B1E3E 0%, #1A6FD4 100%);
+            color: #fff;
+            padding: 28px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .ch-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ch-logo-icon {
+            width: 52px;
+            height: 52px;
+            background: rgba(255,255,255,.15);
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .ch-logo-name {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -.3px;
+        }
+
+        .ch-logo-sub {
+            font-size: 11px;
+            opacity: .6;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-top: 2px;
+        }
+
+        .ch-meta {
+            text-align: right;
+        }
+
+        .ch-meta-title {
+            font-size: 13px;
+            font-weight: 700;
+            opacity: .7;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 4px;
+        }
+
+        .ch-feeid {
+            font-size: 22px;
+            font-weight: 800;
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+
+        .ch-date {
+            font-size: 12px;
+            opacity: .6;
+            margin-top: 4px;
+        }
+
+        /* Status ribbon */
+        .status-ribbon {
+            padding: 10px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .ribbon-paid {
+            background: #ECFDF5;
+            color: #065F46;
+            border-bottom: 2px solid #A7F3D0;
+        }
+
+        .ribbon-pending {
+            background: #FFFBEB;
+            color: #92400E;
+            border-bottom: 2px solid #FDE68A;
+        }
+
+        .ribbon-unpaid {
+            background: #FFF1F2;
+            color: #9F1239;
+            border-bottom: 2px solid #FCA5A5;
+        }
+
+        /* Body */
+        .challan-body {
+            padding: 28px 32px;
+        }
+
+        /* Student info */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 26px;
+            padding: 18px;
+            background: #F8FAFC;
+            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+        }
+
+        .info-item label {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #94A3B8;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .info-item span {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0F172A;
+        }
+
+        /* Fee breakdown table */
+        .fee-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+            .fee-table th {
+                background: #F1F5F9;
+                padding: 10px 14px;
+                text-align: left;
+                font-size: 11px;
+                font-weight: 700;
+                color: #64748B;
+                text-transform: uppercase;
+                letter-spacing: .5px;
+            }
+
+            .fee-table td {
+                padding: 12px 14px;
+                font-size: 14px;
+                color: #0F172A;
+                border-bottom: 1px solid #F1F5F9;
+            }
+
+            .fee-table tr:last-child td {
+                border-bottom: none;
+            }
+
+            .fee-table .amount {
+                text-align: right;
+                font-weight: 600;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .fee-table .na {
+                color: #CBD5E1;
+                font-size: 12px;
+            }
+
+        /* Total row */
+        .total-row {
+            background: linear-gradient(135deg, #0B1E3E, #1A6FD4);
+            color: #fff;
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+
+        .total-label {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .total-amount {
+            font-size: 22px;
+            font-weight: 800;
+            font-family: monospace;
+        }
+
+        /* Due date */
+        .due-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 22px;
+            font-size: 13.5px;
+            font-weight: 600;
+        }
+
+            .due-box.overdue {
+                background: #FFF1F2;
+                border: 1px solid #FCA5A5;
+                color: #9F1239;
+            }
+
+            .due-box.normal {
+                background: #EFF6FF;
+                border: 1px solid #BFDBFE;
+                color: #1E40AF;
+            }
+
+            .due-box.ok {
+                background: #ECFDF5;
+                border: 1px solid #A7F3D0;
+                color: #065F46;
+            }
+
+        /* Payment proof section */
+        .proof-section {
+            border: 2px dashed #E2E8F0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 22px;
+        }
+
+        .proof-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0F172A;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .proof-uploaded {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #F0FDF4;
+            border: 1px solid #A7F3D0;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #065F46;
+        }
+
+        .upload-form label.upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 22px;
+            border: 2px dashed #BFDBFE;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #F0F7FF;
+            transition: .18s;
+            text-align: center;
+        }
+
+            .upload-form label.upload-label:hover {
+                background: #DBEAFE;
+                border-color: #1A6FD4;
+            }
+
+            .upload-form label.upload-label .upload-icon {
+                font-size: 32px;
+                color: #1A6FD4;
+            }
+
+            .upload-form label.upload-label .upload-text {
+                font-size: 13.5px;
+                font-weight: 700;
+                color: #1A6FD4;
+            }
+
+            .upload-form label.upload-label .upload-sub {
+                font-size: 11.5px;
+                color: #94A3B8;
+            }
+
+        .upload-form input[type="file"] {
+            display: none;
+        }
+
+        #filePreview {
+            display: none;
+            margin-top: 10px;
+            padding: 10px 14px;
+            background: #EFF6FF;
+            border: 1px solid #BFDBFE;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #1E40AF;
+            font-weight: 600;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-upload {
+            margin-top: 12px;
+            width: 100%;
+            justify-content: center;
+            background: linear-gradient(135deg, #1A6FD4, #1d4ed8);
+            color: #fff;
+            padding: 11px;
+            font-size: 14px;
+        }
+
+        /* Footer */
+        .challan-footer {
+            background: #F8FAFC;
+            border-top: 1px solid #E2E8F0;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11.5px;
+            color: #94A3B8;
+        }
+
+        /* Print styles */
+        @@media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .action-bar {
+                display: none !important;
+            }
+
+            .proof-section {
+                display: none !important;
+            }
+
+            .challan {
+                box-shadow: none;
+                border-radius: 0;
+                max-width: 100%;
+            }
+
+            .challan-header, .status-ribbon, .total-row {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="action-bar">
+        <a href="/Student/Fees" class="btn btn-secondary">
+            &#8592; Back to Fees
+        </a>
+        <button onclick="window.print()" class="btn btn-secondary">
+            &#128438; Print Challan
+        </button>
+        <button onclick="downloadAsPDF()" class="btn btn-primary">
+            &#11015; Download PDF
+        </button>
+    </div>
+
+    <div class="challan" id="challanCard">
+
+        <div class="challan-header">
+            <div class="ch-logo">
+                <div class="ch-logo-icon">🎓</div>
+                <div>
+                    <div class="ch-logo-name">AI Campus</div>
+                    <div class="ch-logo-sub">University Fee Challan</div>
+                </div>
+            </div>
+            <div class="ch-meta">
+                <div class="ch-meta-title">Challan No.</div>
+                <div class="ch-feeid">@Model.FeeId</div>
+                <div class="ch-date">Issued: @Model.CreatedAt.ToString("dd MMMM yyyy")</div>
+            </div>
+        </div>
+
+        @{
+            var ribbonClass = Model.Status == "Paid" ? "ribbon-paid"
+
+            : Model.Status == "Pending Verification" ? "ribbon-pending"
+
+            : "ribbon-unpaid";
+
+
+
+            var ribbonIcon = Model.Status == "Paid" ? "✅"
+
+            : Model.Status == "Pending Verification" ? "⏳"
+
+            : "❌";
+
+
+
+            var ribbonText = Model.Status == "Paid"
+
+            ? $"PAID on {Model.PaidAt?.ToString("dd MMM yyyy")}"
+
+            : Model.Status == "Pending Verification"
+
+            ? "PAYMENT PROOF SUBMITTED — AWAITING ADMIN APPROVAL"
+
+            : "PAYMENT PENDING";
+        }
+        <div class="status-ribbon @ribbonClass">
+            <span>@ribbonIcon &nbsp; @ribbonText</span>
+            <span>Due: @Model.DueDate.ToString("dd MMM yyyy")</span>
+        </div>
+
+        <div class="challan-body">
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Student Name</label>
+                    <span>@Model.StudentName</span>
+                </div>
+                <div class="info-item">
+                    <label>Program</label>
+                    <span>@Model.Program</span>
+                </div>
+                <div class="info-item">
+                    <label>Semester</label>
+                    <span>Semester @Model.SemesterNo</span>
+                </div>
+                <div class="info-item">
+                    <label>Academic Year</label>
+                    <span>@Model.CreatedAt.Year — @(Model.CreatedAt.Year + 1)</span>
+                </div>
+            </div>
+
+            <table class="fee-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Fee Head</th>
+                        <th>Description</th>
+                        <th style="text-align:right;">Amount (PKR)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="color:#94A3B8;font-size:12px;">01</td>
+                        <td><strong>Tuition Fee</strong></td>
+                        <td style="font-size:12px;color:#64748B;">Semester tuition charges</td>
+                        <td class="amount">@Model.TuitionFee.ToString("N0")</td>
+                    </tr>
+                    <tr>
+                        <td style="color:#94A3B8;font-size:12px;">02</td>
+                        <td><strong>Library Fee</strong></td>
+                        <td style="font-size:12px;color:#64748B;">Library access & resources</td>
+                        <td class="amount">@Model.LibraryFee.ToString("N0")</td>
+                    </tr>
+                    <tr>
+                        <td style="color:#94A3B8;font-size:12px;">03</td>
+                        <td>
+                            @if (Model.HasTransport)
+
+                            {
+                                <strong>Transport Fee</strong>
+                            }
+
+                            else
+
+                            {
+                                <span class="na">Transport Fee</span>
+                            }
+                        </td>
+                        <td style="font-size:12px;color:#64748B;">
+                            @if (Model.HasTransport)
+
+                            {
+                                <text>University bus service</text>
+                            }
+
+                            else
+
+                            {
+                                <text>Not applicable</text>
+                            }
+                        </td>
+                        <td class="amount">
+                            @if (Model.HasTransport)
+
+                            {
+                                @Model.TransportFee.ToString("N0")
+                            }
+
+                            else
+
+                            {
+                                <span class="na">—</span>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="color:#94A3B8;font-size:12px;">04</td>
+                        <td>
+                            @if (Model.HasHostel)
+
+                            {
+                                <strong>Hostel Fee</strong>
+                            }
+
+                            else
+
+                            {
+                                <span class="na">Hostel Fee</span>
+                            }
+                        </td>
+                        <td style="font-size:12px;color:#64748B;">
+                            @if (Model.HasHostel)
+
+                            {
+                                <text>Hostel accommodation</text>
+                            }
+
+                            else
+
+                            {
+                                <text>Not applicable</text>
+                            }
+                        </td>
+                        <td class="amount">
+                            @if (Model.HasHostel)
+
+                            {
+                                @Model.HostelFee.ToString("N0")
+                            }
+
+                            else
+
+                            {
+                                <span class="na">—</span>
+                            }
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="total-row">
+                <div class="total-label">Total Payable Amount</div>
+                <div class="total-amount">PKR @Model.TotalFee.ToString("N0")</div>
+            </div>
+
+            @{
+                var isOverdue = Model.Status != "Paid" && Model.DueDate < DateTime.Today;
+                var dueClass = Model.Status == "Paid" ? "ok" : isOverdue ? "overdue" : "normal";
+                var dueMsg = Model.Status == "Paid"
+                ? $"✅  Fee paid on {Model.PaidAt?.ToString("dd MMM yyyy")}"
+                : isOverdue
+                ? $"⚠️  OVERDUE — Payment was due on {Model.DueDate:dd MMM yyyy}. Please pay immediately."
+                : $"📅  Please pay by {Model.DueDate:dd MMM yyyy} to avoid late charges.";
+            }
+            <div class="due-box @dueClass">@dueMsg</div>
+
+            <div id="paymentProofWrapper">
+                @if (Model.Status == "Paid")
+
+                {
+                    <div class="proof-section" style="border-color:#A7F3D0;background:#F0FDF4;">
+                        <div class="proof-title" style="color:#065F46;">
+                            ✅ &nbsp; Payment Confirmed
+                        </div>
+                        <p style="font-size:13px;color:#065F46;">
+                            Your payment has been verified and recorded by the administration.
+                            @if (Model.PaidAt.HasValue)
+
+                            {
+                                <text> Paid on <strong>@Model.PaidAt.Value.ToString("dd MMMM yyyy")</strong>.</text>
+                            }
+                            This challan serves as your official receipt.
+                        </p>
+                    </div>
+                }
+
+                else if (Model.Status == "Pending Verification")
+
+                {
+                    <div class="proof-section" style="border-color:#FDE68A;background:#FFFBEB;">
+                        <div class="proof-title" style="color:#92400E;">
+                            ⏳ &nbsp; Proof Under Review
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.PaymentProofPath))
+
+                        {
+                            <div class="proof-uploaded">
+                                📎 &nbsp; @(Model.PaymentProofName ?? "Payment proof submitted")
+                                &nbsp;&mdash;&nbsp; Submitted on @Model.ProofSubmittedAt?.ToString("dd MMM yyyy")
+                            </div>
+                        }
+                        <p style="font-size:12.5px;color:#92400E;margin-top:10px;">
+                            Admin will verify your proof and update the status. No further action needed.
+                        </p>
+                    </div>
+                }
+
+                else
+
+                {
+                    <div class="proof-section">
+                        <div class="proof-title">
+                            📎 &nbsp; Upload Payment Proof
+                        </div>
+                        <p style="font-size:12.5px;color:#64748B;margin-bottom:14px;">
+                            After paying at the bank or online, upload your receipt here.
+                            Admin will verify and mark your fee as paid.
+                        </p>
+                        <form method="post" action="/Student/SubmitPaymentProof" enctype="multipart/form-data" class="upload-form">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="feeId" value="@Model.Id" />
+
+                            <label for="proofFileInput" class="upload-label">
+                                <span class="upload-icon">📂</span>
+                                <span class="upload-text">Click to choose file</span>
+                                <span class="upload-sub">PDF, JPG, PNG — Max 5 MB</span>
+                            </label>
+                            <input type="file" id="proofFileInput" name="proofFile" accept=".pdf,.jpg,.jpeg,.png" onchange="showPreview(this)" required />
+
+                            <div id="filePreview">
+                                <span>📄</span>
+                                <span id="fileName"></span>
+                            </div>
+
+                            <button type="submit" class="btn btn-upload">
+                                ⬆ Submit Payment Proof
+                            </button>
+                        </form>
+                    </div>
+                }
+            </div>
+
+        </div><div class="challan-footer">
+            <span>AI Campus University &mdash; Finance Department</span>
+            <span>Generated: @DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")</span>
+            <span>Challan: @Model.FeeId</span>
+        </div>
+
+    </div>
+    <script>
+        function showPreview(input) {
+            var preview = document.getElementById('filePreview');
+            var nameSpan = document.getElementById('fileName');
+            if (input.files && input.files[0]) {
+                nameSpan.textContent = input.files[0].name;
+                preview.style.display = 'flex';
+            }
+        }
+
+        function downloadAsPDF() {
+            // Select elements to interact with
+            const element = document.getElementById('challanCard');
+            const proofSection = document.getElementById('paymentProofWrapper');
+            const challanNo = "@Model.FeeId" || "Challan";
+
+            // PDF mein upload form ya buttons na dikhane ke liye temporarily hide karein
+            if (proofSection) proofSection.style.display = 'none';
+
+            // Options setup
+            const options = {
+                margin: [10, 12, 10, 12],
+                filename: `Fee_Challan_${challanNo}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Process PDF generation and download
+            html2pdf().set(options).from(element).save().then(() => {
+                // PDF download hone ke baad upload box ko wapas UI par dikhayein
+                if (proofSection) proofSection.style.display = 'block';
+            });
+        }
+    </script>
+
+</body>
+</html>
