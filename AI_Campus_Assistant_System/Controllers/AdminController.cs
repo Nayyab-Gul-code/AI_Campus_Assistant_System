@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Xml;
-
 namespace AI_Campus_Assistant.Controllers
 {
     [Authorize(Roles = "admin")]
@@ -465,7 +464,6 @@ namespace AI_Campus_Assistant.Controllers
             }
             return View();
         }
-
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateResultCard(string studentId, int semesterNo)
         {
