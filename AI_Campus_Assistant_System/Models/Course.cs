@@ -10,11 +10,10 @@ namespace AI_Campus_Assistant.Models
         public string? Id { get; set; }
 
         [BsonElement("title")]
-        public string Title { get; set; } = string.Empty;
+         public string Title { get; set; } = string.Empty;
 
         [BsonElement("code")]
         public string Code { get; set; } = string.Empty; // CS-301
-
         [BsonElement("description")]
         public string? Description { get; set; }
 

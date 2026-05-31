@@ -8,7 +8,6 @@ namespace AI_Campus_Assistant.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
-
         [BsonElement("name")]
         public string Name { get; set; } = string.Empty; // BSCS, BSCE, MS, MBA
 

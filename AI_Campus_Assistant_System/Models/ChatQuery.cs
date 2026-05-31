@@ -3,7 +3,6 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace AI_Campus_Assistant.Models
 {
-
     public class ChatQuery
     {
         [BsonId]
