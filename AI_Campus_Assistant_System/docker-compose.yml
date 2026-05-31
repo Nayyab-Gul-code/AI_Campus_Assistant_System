@@ -1,0 +1,55 @@
+
+version: '3.8'
+
+services:
+
+  app:
+    build: .
+    container_name: ai_campus_app
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - MongoDbSettings__ConnectionString=mongodb://mongo:27017
+      - MongoDbSettings__DatabaseName=AICampusDb
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    networks:
+      - campus_net
+
+  mongo:
+    image: mongo:7
+    container_name: ai_campus_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+      - ./Scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
+    restart: unless-stopped
+    networks:
+      - campus_net
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: ai_campus_mongoexpress
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    networks:
+      - campus_net
+
+volumes:
+  mongodata:
+
+networks:
+  campus_net:
+    driver: bridge
+    
