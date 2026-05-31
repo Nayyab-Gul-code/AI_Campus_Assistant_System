@@ -1,0 +1,83 @@
+@model List<AI_Campus_Assistant.Models.Complaint>
+@{
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+    ViewData["Title"] = "Complaints";
+}
+
+<div style="display:flex;justify-content:flex-end;margin-bottom:18px;">
+  <button onclick="openModal('newComplaintModal')" class="btn btn-primary">
+    <i class="bi bi-plus-circle-fill"></i> New Complaint
+  </button>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-chat-left-text-fill" style="color:#1A6FD4;margin-right:6px;"></i>My Complaints</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:0;">
+    @foreach (var c in Model)
+    {
+      var (stBg,stCl,stIc) = c.Status switch {
+        "resolved"  => ("#ECFDF5","#0D9069","check-circle-fill"),
+        "reviewing" => ("#EFF6FF","#1A6FD4","eye-fill"),
+        _           => ("#FFFBEB","#D97706","hourglass-split")
+      };
+      <div style="padding:16px 20px;border-bottom:1px solid #F1F5F9;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <div style="font-size:14.5px;font-weight:800;color:#0F172A;">@c.Subject</div>
+              <span style="background:@stBg;color:@stCl;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;display:flex;align-items:center;gap:4px;">
+                <i class="bi bi-@stIc"></i> @c.Status
+              </span>
+            </div>
+            <div style="font-size:13px;color:#475569;line-height:1.6;margin-bottom:8px;">@c.Description</div>
+            @if (!string.IsNullOrEmpty(c.AdminReply))
+            {
+              <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:9px;padding:10px 13px;margin-top:8px;">
+                <div style="font-size:11px;font-weight:700;color:#0D9069;text-transform:uppercase;margin-bottom:4px;">
+                  <i class="bi bi-shield-fill-check"></i> Admin Response
+                </div>
+                <div style="font-size:13px;color:#065F46;line-height:1.6;">@c.AdminReply</div>
+              </div>
+            }
+            <div style="font-size:11.5px;color:#94A3B8;margin-top:8px;">
+              <i class="bi bi-calendar3"></i> @c.CreatedAt.ToString("MMM dd, yyyy")
+              @if (c.ResolvedAt.HasValue)
+              {
+                <span style="margin-left:10px;"><i class="bi bi-check-circle-fill" style="color:#0D9069;"></i> Resolved @c.ResolvedAt.Value.ToString("MMM dd, yyyy")</span>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+    @if (!Model.Any())
+    {
+      <div class="empty-state"><i class="bi bi-chat-left-text"></i><h4>No Complaints</h4><p>You haven't submitted any complaints yet.</p></div>
+    }
+  </div>
+</div>
+
+<!-- New Complaint Modal -->
+<div class="modal-backdrop" id="newComplaintModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-title"><i class="bi bi-chat-left-text-fill" style="color:#1A6FD4;margin-right:8px;"></i>New Complaint</div>
+    <form method="post" action="/Student/CreateComplaint">
+      @Html.AntiForgeryToken()
+      <div class="form-group">
+        <label class="form-label">Subject *</label>
+        <input type="text" name="subject" class="form-control" placeholder="Brief subject of your complaint" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description *</label>
+        <textarea name="description" class="form-control" rows="4" placeholder="Describe your complaint in detail..." required style="resize:vertical;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="closeModal('newComplaintModal')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-send-fill"></i> Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script src="/js/site.js"></script>

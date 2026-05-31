@@ -1,0 +1,81 @@
+@model List<AI_Campus_Assistant.Models.Timetable>
+@{
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+    ViewData["Title"] = "Timetable";
+    var user = ViewBag.User as AI_Campus_Assistant.Models.User;
+    var days = new[]{"Monday","Tuesday","Wednesday","Thursday","Friday"};
+    var dayColors = new Dictionary<string,(string bg,string border,string text)>{
+        {"Monday",    ("#EFF6FF","#1A6FD4","#1E40AF")},
+        {"Tuesday",   ("#ECFDF5","#0D9069","#065F46")},
+        {"Wednesday", ("#EDE9FE","#6C63FF","#4338CA")},
+        {"Thursday",  ("#FFFBEB","#D97706","#92400E")},
+        {"Friday",    ("#FFF1F2","#E11D48","#9F1239")},
+    };
+}
+
+@if (user != null)
+{
+  <div style="background:linear-gradient(135deg,#0B1E3E,#1A6FD4);border-radius:14px;padding:16px 22px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <div style="color:rgba(255,255,255,.6);font-size:12px;font-weight:600;">Your Schedule</div>
+      <div style="color:#fff;font-size:17px;font-weight:800;">@user.Program — Semester @user.SemesterNo</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="color:rgba(255,255,255,.6);font-size:11px;">Total Classes</div>
+      <div style="color:#fff;font-size:22px;font-weight:800;">@Model.Count</div>
+    </div>
+  </div>
+}
+
+@if (!Model.Any())
+{
+  <div class="card">
+    <div class="empty-state">
+      <i class="bi bi-calendar-week"></i>
+      <h4>No Timetable Found</h4>
+      <p>No schedule available for your program and semester. Contact admin.</p>
+    </div>
+  </div>
+}
+else
+{
+  foreach (var day in days)
+  {
+    var slots = Model.Where(t => t.DayOfWeek == day).OrderBy(t => t.StartTime).ToList();
+    if (!slots.Any()) continue;
+    var (bg, border, text) = dayColors.ContainsKey(day) ? dayColors[day] : ("#F8FAFC","#E2E8F0","#374151");
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-header" style="background:@bg;border-bottom:2px solid @border;">
+        <span style="font-size:14px;font-weight:800;color:@text;">
+          <i class="bi bi-calendar3" style="margin-right:7px;"></i>@day
+        </span>
+        <span class="badge" style="background:@border;color:#fff;">@slots.Count class@(slots.Count>1?"es":"")</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;padding:14px;">
+        @foreach (var t in slots)
+        {
+          <div style="background:@bg;border:1.5px solid @border;border-radius:12px;padding:14px;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:@border;border-radius:99px 0 0 99px;"></div>
+            <div style="padding-left:8px;">
+              <div style="font-size:14px;font-weight:800;color:#0F172A;margin-bottom:5px;">@t.CourseName</div>
+              <div style="font-size:11.5px;color:#64748B;margin-bottom:3px;">
+                <i class="bi bi-clock" style="color:@border;"></i>
+                <strong>@t.StartTime – @t.EndTime</strong>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                <span style="background:#F8FAFC;border:1px solid #E2E8F0;color:#475569;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;">
+                  <i class="bi bi-door-open-fill"></i> @t.Room
+                </span>
+                <span style="background:@border;color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;">@t.CourseCode</span>
+              </div>
+              <div style="font-size:11.5px;color:#94A3B8;margin-top:6px;">
+                <i class="bi bi-person-fill"></i> @t.TeacherName
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+}
+<script src="/js/site.js"></script>
