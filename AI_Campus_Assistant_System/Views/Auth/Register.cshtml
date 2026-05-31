@@ -1,0 +1,292 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Register";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Create Account — AI Smart Campus</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;min-height:100vh;display:flex;background:#F0F4FB;}
+
+.auth-left{width:42%;min-height:100vh;background:linear-gradient(150deg,#061E16 0%,#0A3326 50%,#0D9069 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;position:relative;overflow:hidden;}
+.auth-left::before{content:'';position:absolute;width:450px;height:450px;border-radius:50%;background:radial-gradient(circle,rgba(52,211,153,.1) 0%,transparent 70%);top:-100px;right:-100px;}
+.auth-left::after{content:'';position:absolute;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(96,165,250,.07) 0%,transparent 70%);bottom:-60px;left:-60px;}
+.left-content{position:relative;z-index:2;max-width:340px;width:100%;}
+.brand{display:flex;align-items:center;gap:13px;margin-bottom:36px;}
+.brand-icon{width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,#0D9069,#34D399);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 8px 24px rgba(13,144,105,.4);}
+.brand-name{color:#fff;font-size:18px;font-weight:800;}
+.brand-sub{color:rgba(255,255,255,.4);font-size:11px;text-transform:uppercase;letter-spacing:.5px;}
+.left-h1{color:#fff;font-size:28px;font-weight:800;line-height:1.2;letter-spacing:-.5px;}
+.left-h1 span{color:#34D399;}
+.left-p{color:rgba(255,255,255,.5);font-size:13px;line-height:1.65;margin-top:12px;}
+
+.role-cards{margin-top:26px;display:flex;flex-direction:column;gap:9px;}
+.rc{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:11px 13px;}
+.rc-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.rci-blue{background:rgba(96,165,250,.2);}
+.rci-teal{background:rgba(52,211,153,.2);}
+.rci-purple{background:rgba(167,139,250,.2);}
+.rc-title{color:#fff;font-size:12.5px;font-weight:700;}
+.rc-desc{color:rgba(255,255,255,.4);font-size:11px;}
+.rc-badge{margin-left:auto;font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;}
+.rb-blue{background:rgba(96,165,250,.2);color:#93C5FD;}
+.rb-teal{background:rgba(52,211,153,.2);color:#6EE7B7;}
+.rb-purple{background:rgba(167,139,250,.2);color:#C4B5FD;}
+
+.auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 28px;background:#fff;overflow-y:auto;}
+.form-wrap{width:100%;max-width:460px;}
+.form-head{margin-bottom:20px;}
+.form-head h2{font-size:24px;font-weight:800;color:#0F172A;letter-spacing:-.4px;}
+.form-head p{color:#64748B;font-size:13px;margin-top:5px;}
+
+.rp{display:flex;gap:8px;margin-bottom:18px;}
+.rp-card{flex:1;padding:10px 7px;border:2px solid #E2E8F0;border-radius:12px;cursor:pointer;text-align:center;transition:all .18s;background:#F8FAFC;}
+.rp-card i{font-size:20px;display:block;margin-bottom:3px;color:#9CA3AF;}
+.rp-card span{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#9CA3AF;}
+.rp-student.sel{border-color:#1A6FD4;background:#EFF6FF;}
+.rp-student.sel i,.rp-student.sel span{color:#1A6FD4;}
+.rp-teacher.sel{border-color:#0D9069;background:#ECFDF5;}
+.rp-teacher.sel i,.rp-teacher.sel span{color:#0D9069;}
+
+.form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg{margin-bottom:13px;}
+.fl{display:block;font-size:12.5px;font-weight:700;color:#374151;margin-bottom:5px;}
+.req{color:#EF4444;}
+.iw{position:relative;}
+.iw i.li{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#9CA3AF;font-size:14px;pointer-events:none;}
+.fi{width:100%;padding:10px 13px 10px 38px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:13px;color:#0F172A;background:#F8FAFC;outline:none;transition:all .18s;font-family:'Inter',sans-serif;}
+.fi:focus{border-color:#1A6FD4;background:#fff;box-shadow:0 0 0 3px rgba(26,111,212,.1);}
+.fi.t-focus:focus{border-color:#0D9069;box-shadow:0 0 0 3px rgba(13,144,105,.1);}
+.fi-noico{padding-left:13px;}
+.pw-bar{height:4px;background:#E2E8F0;border-radius:4px;overflow:hidden;margin-top:5px;}
+.pw-fill{height:100%;border-radius:4px;transition:all .3s;width:0%;}
+.pw-lbl{font-size:10.5px;margin-top:3px;}
+.err-box{background:#FFF1F2;border:1px solid #FCA5A5;color:#9F1239;padding:10px 14px;border-radius:10px;font-size:12.5px;display:flex;align-items:center;gap:8px;margin-bottom:14px;font-weight:500;}
+.terms-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:16px;margin-top:2px;}
+.terms-row input{width:15px;height:15px;margin-top:2px;accent-color:#1A6FD4;cursor:pointer;flex-shrink:0;}
+.terms-row label{font-size:12.5px;color:#64748B;cursor:pointer;line-height:1.5;}
+.terms-row a{color:#1A6FD4;font-weight:600;}
+.btn-submit{width:100%;padding:12px;border-radius:10px;background:linear-gradient(135deg,#1A6FD4,#1d4ed8);color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-submit:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(26,111,212,.35);}
+.btn-teacher-col{background:linear-gradient(135deg,#0D9069,#086B4E);}
+.btn-teacher-col:hover{box-shadow:0 8px 20px rgba(13,144,105,.35);}
+.form-foot{text-align:center;margin-top:14px;font-size:13px;color:#64748B;}
+.form-foot a{color:#1A6FD4;font-weight:700;text-decoration:none;}
+.admin-note{background:#FFFBEB;border:1px solid #FDE68A;border-radius:9px;padding:10px 13px;margin-top:12px;font-size:12px;color:#92400E;display:flex;align-items:center;gap:8px;}
+
+/* Semester options by program */
+.prog-select-wrap{position:relative;}
+@@media(max-width:768px){.auth-left{display:none;}.form-grid2{grid-template-columns:1fr;}.auth-right{padding:24px 16px;}}
+</style>
+</head>
+<body>
+<div class="auth-left">
+  <div class="left-content">
+    <div class="brand">
+      <div class="brand-icon">🎓</div>
+      <div><div class="brand-name">AI Campus</div><div class="brand-sub">Smart University Platform</div></div>
+    </div>
+    <h1 class="left-h1">Join the <span>Smart Campus</span> Community</h1>
+    <p class="left-p">Create your account and get instant access to AI-powered tools, grades, attendance and much more.</p>
+    <div class="role-cards">
+      <div class="rc">
+        <div class="rc-icon rci-blue"><i class="bi bi-mortarboard-fill" style="color:#60A5FA"></i></div>
+        <div><div class="rc-title">Student</div><div class="rc-desc">Access grades, AI chat and assignments</div></div>
+        <span class="rc-badge rb-blue">Open</span>
+      </div>
+      <div class="rc">
+        <div class="rc-icon rci-teal"><i class="bi bi-person-workspace" style="color:#34D399"></i></div>
+        <div><div class="rc-title">Teacher</div><div class="rc-desc">Manage courses, attendance and grades</div></div>
+        <span class="rc-badge rb-teal">Open</span>
+      </div>
+      <div class="rc">
+        <div class="rc-icon rci-purple"><i class="bi bi-shield-fill-check" style="color:#A78BFA"></i></div>
+        <div><div class="rc-title">Admin</div><div class="rc-desc">Pre-seeded — contact system admin</div></div>
+        <span class="rc-badge rb-purple">Closed</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="auth-right">
+  <div class="form-wrap">
+    <div class="form-head">
+      <h2>Create Account</h2>
+      <p>Select your role and fill in your details</p>
+    </div>
+
+    <div class="rp" id="rolePicker">
+      <div class="rp-card rp-student sel" onclick="pickRole('student')">
+        <i class="bi bi-mortarboard-fill"></i><span>Student</span>
+      </div>
+      <div class="rp-card rp-teacher" onclick="pickRole('teacher')">
+        <i class="bi bi-person-workspace"></i><span>Teacher</span>
+      </div>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+      foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+      { <div class="err-box"><i class="bi bi-exclamation-circle-fill"></i>@err.ErrorMessage</div> }
+    }
+
+    <form method="post" action="/Auth/Register">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="role" id="roleInput" value="student"/>
+
+      <div class="form-grid2">
+        <div class="fg">
+          <label class="fl">Full Name <span class="req">*</span></label>
+          <div class="iw"><i class="bi bi-person-fill li"></i>
+            <input type="text" name="name" class="fi" placeholder="Your full name" required/>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">Phone</label>
+          <div class="iw"><i class="bi bi-telephone-fill li"></i>
+            <input type="tel" name="phone" class="fi" placeholder="+92 300 0000000"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Email Address <span class="req">*</span></label>
+        <div class="iw"><i class="bi bi-envelope-fill li"></i>
+          <input type="email" name="email" class="fi" placeholder="you@@university.edu" required/>
+        </div>
+      </div>
+
+      <!-- Student fields -->
+      <div id="studentFields">
+        <div class="form-grid2">
+          <div class="fg">
+            <label class="fl">Program</label>
+            <select name="program" class="fi fi-noico" id="programSelect" onchange="updateSemesters()">
+              <option value="">Select Program</option>
+              <option value="BSCS">BSCS</option>
+              <option value="BSCE">BSCE</option>
+              <option value="BSIT">BSIT</option>
+              <option value="MS CS">MS CS</option>
+              <option value="MBA">MBA</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">Semester</label>
+            <select name="semesterNo" class="fi fi-noico" id="semesterSelect">
+              <option value="">Select Semester</option>
+              @for(int s=1;s<=8;s++){
+                <option value="@s">Semester @s</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teacher fields -->
+      <div id="teacherFields" style="display:none;">
+        <div class="fg">
+          <label class="fl">Designation</label>
+          <div class="iw"><i class="bi bi-briefcase-fill li"></i>
+            <input type="text" name="designation" class="fi" placeholder="Lecturer, Asst. Professor..."/>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid2">
+        <div class="fg">
+          <label class="fl">Password <span class="req">*</span></label>
+          <div class="iw"><i class="bi bi-lock-fill li"></i>
+            <input type="password" name="password" id="pw1" class="fi" placeholder="Min 6 chars" required
+                   oninput="checkStrength(this.value)"/>
+          </div>
+          <div class="pw-bar"><div class="pw-fill" id="pwFill"></div></div>
+          <div class="pw-lbl" id="pwLbl" style="color:#9CA3AF;">Enter a password</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Confirm Password <span class="req">*</span></label>
+          <div class="iw"><i class="bi bi-lock-fill li"></i>
+            <input type="password" name="confirmPassword" id="pw2" class="fi" placeholder="Re-enter" required
+                   oninput="checkMatch()"/>
+          </div>
+          <div class="pw-bar"><div class="pw-fill" id="matchFill"></div></div>
+          <div class="pw-lbl" id="matchLbl" style="color:#9CA3AF;">Must match</div>
+        </div>
+      </div>
+
+      <div class="terms-row">
+        <input type="checkbox" id="terms" required/>
+        <label for="terms">I agree to the <a href="#">Terms of Use</a> and <a href="#">Privacy Policy</a></label>
+      </div>
+
+      <button type="submit" class="btn-submit" id="regBtn">
+        <i class="bi bi-person-plus-fill"></i> Create My Account
+      </button>
+    </form>
+
+    <div class="form-foot">Already have an account? <a href="/Auth/Login">Sign In</a></div>
+    <div class="admin-note">
+      <i class="bi bi-shield-lock-fill"></i>
+      Admin accounts are pre-configured. Contact your system administrator.
+    </div>
+  </div>
+</div>
+
+<script>
+const bsSems = [1,2,3,4,5,6,7,8];
+const msSems = [1,2,3,4];
+
+function updateSemesters() {
+  const prog = document.getElementById('programSelect').value;
+  const sel  = document.getElementById('semesterSelect');
+  const max  = (prog==='MS CS'||prog==='MBA') ? 4 : 8;
+  sel.innerHTML = '<option value="">Select Semester</option>';
+  for(let s=1;s<=max;s++){
+    sel.innerHTML += `<option value="${s}">Semester ${s}</option>`;
+  }
+}
+
+function pickRole(role) {
+  document.getElementById('roleInput').value = role;
+  document.querySelectorAll('.rp-card').forEach(c=>c.classList.remove('sel'));
+  document.querySelector('.rp-'+role).classList.add('sel');
+  document.getElementById('studentFields').style.display = role==='student'?'':'none';
+  document.getElementById('teacherFields').style.display = role==='teacher'?'':'none';
+  document.getElementById('regBtn').className = 'btn-submit'+(role==='teacher'?' btn-teacher-col':'');
+  document.querySelectorAll('.fi').forEach(i=>{
+    i.className = i.className.replace(' t-focus','')+(role==='teacher'?' t-focus':'');
+  });
+}
+
+function checkStrength(val) {
+  let score=0;
+  if(val.length>=6)score++;if(val.length>=10)score++;
+  if(/[A-Z]/.test(val))score++;if(/[0-9]/.test(val))score++;
+  if(/[^A-Za-z0-9]/.test(val))score++;
+  const levels=[
+    {pct:'20%',color:'#EF4444',text:'Too weak'},
+    {pct:'40%',color:'#F97316',text:'Weak'},
+    {pct:'60%',color:'#EAB308',text:'Fair'},
+    {pct:'80%',color:'#22C55E',text:'Strong'},
+    {pct:'100%',color:'#10B981',text:'Very strong'},
+  ];
+  const l=levels[Math.min(score,4)];
+  document.getElementById('pwFill').style.cssText=`width:${l.pct};background:${l.color}`;
+  const lbl=document.getElementById('pwLbl');lbl.textContent=l.text;lbl.style.color=l.color;
+}
+
+function checkMatch() {
+  const p1=document.getElementById('pw1').value,p2=document.getElementById('pw2').value;
+  const f=document.getElementById('matchFill'),l=document.getElementById('matchLbl');
+  if(!p2){f.style.width='0';l.textContent='Must match';l.style.color='#9CA3AF';return;}
+  if(p1===p2){f.style.cssText='width:100%;background:#10B981';l.textContent='Match ✓';l.style.color='#10B981';}
+  else{f.style.cssText='width:100%;background:#EF4444';l.textContent='No match';l.style.color='#EF4444';}
+}
+</script>
+</body>
+</html>
