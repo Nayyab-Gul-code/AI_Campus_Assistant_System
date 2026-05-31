@@ -1,0 +1,136 @@
+@model AI_Campus_Assistant.Models.FAQ
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    ViewData["Title"] = "Edit FAQ";
+}
+
+<style>
+    /* Modern Form Styling to match the Add FAQ Design */
+    .modern-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        border: 1px solid #E2E8F0;
+        overflow: hidden;
+    }
+
+    .modern-form .form-label {
+        font-size: 14px;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+
+    .modern-form .form-control,
+    .modern-form .form-select {
+        border-radius: 8px;
+        border: 1px solid #CBD5E1;
+        padding: 10px 14px;
+        font-size: 14px;
+        color: #1E293B;
+        transition: all 0.2s ease;
+    }
+
+        .modern-form .form-control:focus,
+        .modern-form .form-select:focus {
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+            outline: none;
+        }
+
+    .modern-form .form-text {
+        font-size: 12px;
+        color: #64748B;
+        margin-top: 6px;
+    }
+
+    .modern-form .form-check-input {
+        border-radius: 4px;
+        border-color: #CBD5E1;
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+    }
+
+        .modern-form .form-check-input:checked {
+            background-color: #1A6FD4;
+            border-color: #1A6FD4;
+        }
+
+    .modern-form .form-check-label {
+        font-size: 14px;
+        color: #334155;
+        cursor: pointer;
+        user-select: none;
+        padding-left: 4px;
+    }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="modern-card">
+            <!-- Header with Premium Blue Gradient -->
+            <div class="card-header" style="background: linear-gradient(135deg, #1A6FD4, #1d4ed8); border: none; padding: 22px 28px;">
+                <h5 style="color:#fff; font-weight:800; margin:0; display:flex; align-items:center; gap:8px;">
+                    <i class="bi bi-pencil-square" style="font-size: 20px;"></i> Edit FAQ
+                </h5>
+            </div>
+
+            <!-- Form Body -->
+            <div class="card-body p-4 (style='padding: 30px 35px !important;')">
+                <form method="post" action="/Admin/EditFAQ/@Model.Id" class="modern-form">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Question <span class="text-danger">*</span></label>
+                        <input name="Question" class="form-control" value="@Model.Question" placeholder="e.g. What is the fee structure?" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Answer <span class="text-danger">*</span></label>
+                        <textarea name="Answer" class="form-control" rows="5" placeholder="Type the full answer here..." required>@Model.Answer</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Keywords
+                            <span style="font-size:12px; color:#64748B; font-weight:400; margin-left:4px;">(comma-separated)</span>
+                        </label>
+                        <input name="Keywords" class="form-control" value="@Model.Keywords" placeholder="fee,fees,challan,payment" />
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i> Yeh keywords student/teacher ke question se match honge. Match hone par FAQ ka answer dega, Gemini nahi chalega.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Category</label>
+                        <select name="Category" class="form-select">
+                            @foreach (var cat in new[] { "general", "fee", "admission", "exam", "attendance", "schedule", "rules", "hostel", "transport" })
+
+                            {
+                                <option value="@cat" @(Model.Category == cat ? "selected" : "")>
+                                    @System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(cat)
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-4 form-check d-flex align-items-center gap-2" style="padding-left: 0;">
+                        <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="isActive" @(Model.IsActive ? "checked" : "") style="margin-left: 0;" />
+                        <label class="form-check-label fw-semibold" for="isActive">Active (visible to students/teachers)</label>
+                    </div>
+
+                    <!-- Actions Footer Buttons -->
+                    <div class="d-flex gap-2 justify-content-end" style="border-top: 1px solid #F1F5F9; padding-top: 22px; margin-top: 15px;">
+                        <a href="/Admin/FAQs" class="btn btn-light" style="border: 1px solid #CBD5E1; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="bi bi-arrow-left"></i> Back
+                        </a>
+                        <button type="submit" class="btn btn-primary" style="font-weight: 500; background: #1A6FD4; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="bi bi-check-lg"></i> Update FAQ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

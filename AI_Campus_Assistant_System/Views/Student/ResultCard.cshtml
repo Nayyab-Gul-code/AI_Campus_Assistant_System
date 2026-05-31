@@ -1,0 +1,442 @@
+@* FILE: Views/Student/ResultCard.cshtml *@
+@{
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+
+    ViewData["Title"] = "My Transcript";
+
+
+
+    var student = ViewBag.Student as AI_Campus_Assistant.Models.User;
+
+    var grades = ViewBag.Grades as List<AI_Campus_Assistant.Models.Grade> ?? new();
+
+    var selSemester = ViewBag.SelectedSemester as int?;
+
+    var allSemesters = ViewBag.AllSemesters as List<int> ?? new();
+
+    var isReleased = (bool)(ViewBag.IsReleased ?? false);
+
+    var sgpa = (double)(ViewBag.SGPA ?? 0.0);
+
+    var obtMarks = (double)(ViewBag.ObtainedMarks ?? 0.0);
+
+    var maxMarks = (double)(ViewBag.TotalMaxMarks ?? 0.0);
+
+    var pctOverall = maxMarks > 0 ? obtMarks / maxMarks * 100 : 0;
+
+
+
+    int passed = grades.Count(g => g.GradeLetter != "F" && g.GradeLetter != "N/A");
+
+    int failed = grades.Count(g => g.GradeLetter == "F");
+
+
+
+    string rmLine = "", rmColor = "", rmIcon = "", rmBg = "";
+
+    if (grades.Any())
+
+    {
+
+        if (sgpa >= 3.5) { rmLine = "Excellent Performance — Outstanding result!"; rmColor = "#0D9069"; rmBg = "#ECFDF5"; rmIcon = "bi-trophy-fill"; }
+
+        else if (sgpa >= 3.0) { rmLine = "Good Performance — Well done, keep it up!"; rmColor = "#1A6FD4"; rmBg = "#EFF6FF"; rmIcon = "bi-star-fill"; }
+
+        else if (sgpa >= 2.5) { rmLine = "Satisfactory Performance — Room to improve."; rmColor = "#D97706"; rmBg = "#FFFBEB"; rmIcon = "bi-graph-up"; }
+
+        else if (sgpa >= 2.0) { rmLine = "Below Average — Extra effort required."; rmColor = "#EA580C"; rmBg = "#FFF7ED"; rmIcon = "bi-exclamation-circle-fill"; }
+
+        else { rmLine = "Poor Performance — Immediate improvement required."; rmColor = "#E11D48"; rmBg = "#FFF1F2"; rmIcon = "bi-x-circle-fill"; }
+
+    }
+
+
+
+    Func<string, string> gc = g =>
+
+        g.StartsWith("A") ? "#0D9069" :
+
+        g.StartsWith("B") ? "#1A6FD4" :
+
+        g.StartsWith("C") ? "#D97706" :
+
+        g.StartsWith("D") ? "#EA580C" : "#E11D48";
+
+
+
+    Func<string, string> subRemark = g =>
+
+        g.StartsWith("A") ? "Excellent" :
+
+        g.StartsWith("B") ? "Good" :
+
+        g.StartsWith("C") ? "Average" :
+
+        g.StartsWith("D") ? "Pass" : "Fail";
+}
+
+<style>
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        body, .main-content {
+            background: #fff !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .rc-wrap {
+            box-shadow: none !important;
+            border: 2px solid #0B1E3E !important;
+            border-radius: 0 !important;
+            padding: 20px !important;
+        }
+
+        .rc-head {
+            background: #0B1E3E !important;
+            color: #fff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .sig-space {
+            margin-top: 80px !important;
+        }
+    }
+
+    .rc-wrap {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+        border: 1px solid #E2E8F0;
+        position: relative;
+        padding: 40px;
+        max-width: 1000px;
+        margin: 0 auto;
+        background-image: radial-gradient(rgba(15, 30, 62, 0.015) 1px, transparent 0);
+        background-size: 24px 24px;
+    }
+
+        .rc-wrap::before {
+            content: "KICSIT";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 110px;
+            font-weight: 900;
+            color: rgba(15, 30, 62, 0.02);
+            letter-spacing: 12px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+    .rc-header-block {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 3px double #0B1E3E;
+        padding-bottom: 20px;
+        margin-bottom: 25px;
+    }
+
+    .rc-uni-title {
+        color: #0B1E3E;
+        font-family: 'Georgia', serif;
+        font-weight: 800;
+        font-size: 26px;
+        letter-spacing: 0.5px;
+        margin: 0;
+        text-transform: uppercase;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 12fr);
+        gap: 12px;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 25px;
+        font-size: 13.5px;
+    }
+
+    .info-item {
+        display: flex;
+        gap: 8px;
+        color: #334155;
+    }
+
+    .info-label {
+        font-weight: 700;
+        color: #64748B;
+        width: 120px;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+    }
+
+    .info-val {
+        color: #0F172A;
+        font-weight: 600;
+    }
+
+    .rc-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        position: relative;
+        z-index: 1;
+    }
+
+        .rc-table th {
+            background: #0B1E3E;
+            color: #fff;
+            padding: 10px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            border: 1px solid #0B1E3E;
+            text-transform: uppercase;
+        }
+
+        .rc-table td {
+            padding: 12px;
+            border: 1px solid #CBD5E1;
+            font-size: 13px;
+            color: #1E293B;
+        }
+
+        .rc-table tr:nth-child(even) {
+            background-color: #F8FAFC;
+        }
+
+    .metric-box {
+        border: 1px solid #CBD5E1;
+        border-radius: 6px;
+        padding: 10px 15px;
+        text-align: center;
+        background: #fff;
+        min-width: 100px;
+    }
+
+    .metric-val {
+        font-size: 18px;
+        font-weight: 800;
+        color: #0B1E3E;
+    }
+
+    .metric-lbl {
+        font-size: 10px;
+        font-weight: 700;
+        color: #64748B;
+        text-transform: uppercase;
+        margin-top: 2px;
+    }
+
+    .g-tag {
+        font-weight: 800;
+        background: #F1F5F9;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        border: 1px solid #CBD5E1;
+    }
+
+    .filter-card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #E2E8F0;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .rm-bar {
+        border-radius: 8px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 13.5px;
+        margin-bottom: 20px;
+    }
+</style>
+
+@* Top Action Bar *@
+<div class="no-print" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+    <span style="font-weight:800; font-size:18px; color:#0B1E3E;">
+        <i class="bi bi-award-fill" style="color:#1A6FD4; margin-right:4px;"></i> Academic Transcript Portal
+    </span>
+    @if (grades.Any() && isReleased)
+
+    {
+        <div style="display:flex; gap:10px;">
+            <button onclick="window.print()" class="btn btn-light" style="border-radius:10px; padding:8px 16px; font-weight:600; border:1px solid #CBD5E1; color:#334155; background:#fff;">
+                <i class="bi bi-printer-fill" style="margin-right:6px; color:#64748B;"></i> Print Card
+            </button>
+
+            <button onclick="downloadTranscriptPDF()" class="btn btn-primary" style="border-radius:10px; padding:8px 18px; font-weight:600; background:#1A6FD4; border:none; box-shadow:0 4px 12px rgba(26, 111, 212, 0.2);">
+                <i class="bi bi-download" style="margin-right:6px;"></i> Download PDF
+            </button>
+        </div>
+    }
+</div>
+
+@* Tabs Selector *@
+@if (allSemesters.Any())
+
+{
+    <div class="filter-card no-print">
+        <div style="font-size:11px;font-weight:800;color:#94A3B8;letter-spacing:.8px;margin-bottom:12px;text-transform:uppercase;">Select Term / Semester</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            @foreach (var sem in allSemesters)
+
+            {
+                <a href="/Student/ResultCard?semesterNo=@sem" class="btn @(selSemester == sem ? "btn-primary" : "btn-light")" style="border-radius:8px; padding:6px 16px; font-weight:600; font-size:13px;">
+                    Semester @sem
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@if (student != null && grades.Any())
+
+{
+    @if (!isReleased)
+
+    {
+        <div style="text-align:center;background:#fff;border-radius:16px;padding:60px 20px;box-shadow:0 10px 30px rgba(0,0,0,.02);border:1px solid #E2E8F0; margin-top:20px;">
+            <div style="width:70px;height:70px;background:#FFFBEB;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:18px;"><i class="bi bi-lock-fill" style="font-size:32px;color:#D97706;"></i></div>
+            <h4 style="color:#1E293B;font-size:16px;font-weight:700;margin:0 0 6px;">Result Not Released</h4>
+            <p style="color:#64748B;font-size:13.5px;">Semester @selSemester ka result abhi tak official terminal se release nahi kiya gaya.</p>
+        </div>
+    }
+
+    else
+
+    {
+        <div class="rc-wrap" id="resultCard">
+            <div class="rc-header-block">
+                <div>
+                    <h2 class="rc-uni-title">Kahuta Institute of Technology</h2>
+                    <div style="font-size:12px; color:#475569; font-weight:600; text-transform:uppercase; margin-top:3px; letter-spacing:0.5px;">
+                        Affiliated with Air University &nbsp;|&nbsp; Examination Department
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:11px; font-weight:700; color:#64748B;">DOCUMENT SERIAL</div>
+                    <div style="font-size:14px; font-family:'Courier New', monospace; font-weight:700; color:#E11D48;">KIC-@DateTime.UtcNow.Year-@selSemester</div>
+                </div>
+            </div>
+
+            <div style="text-align:center; margin-bottom:20px;">
+                <span style="font-size:16px; font-weight:800; color:#0B1E3E; border-bottom:1.5px solid #0B1E3E; padding-bottom:2px; letter-spacing:1px; text-transform:uppercase;">Official Statement of Marks</span>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item"><span class="info-label">Student Name:</span><span class="info-val">@student.Name</span></div>
+                <div class="info-item"><span class="info-label">Roll Number:</span><span class="info-val">232201058</span></div>
+                <div class="info-item"><span class="info-label">Degree Program:</span><span class="info-val">@student.Program</span></div>
+                <div class="info-item"><span class="info-label">Academic Term:</span><span class="info-val">Semester @selSemester</span></div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(rmLine))
+
+            {
+                <div class="rm-bar" style="background: @rmBg; color: @rmColor; border: 1px solid @(rmColor + "25");">
+                    <i class="bi @rmIcon" style="font-size: 16px;"></i>
+                    <span>@rmLine</span>
+                </div>
+            }
+
+            <table class="rc-table">
+                <thead>
+                    <tr>
+                        <th style="width:5%; text-align:center;">Sr.</th>
+                        <th style="width:12%; text-align:center;">Course Code</th>
+                        <th style="width:43%;">Course Title</th>
+                        <th style="width:8%; text-align:center;">Mid (25)</th>
+                        <th style="width:8%; text-align:center;">Final (50)</th>
+                        <th style="width:8%; text-align:center;">Sess (25)</th>
+                        <th style="width:9%; text-align:center;">Total (100)</th>
+                        <th style="width:8%; text-align:center;">Grade</th>
+                        <th style="width:7%; text-align:center;">G.P.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int sr = 1;
+                    }
+                    @foreach (var g in grades)
+
+                    {
+
+                        var gColor = gc(g.GradeLetter);
+                        <tr>
+                            <td style="text-align:center; font-family:monospace;">@sr.ToString("D2")</td>
+                            <td style="text-align:center; font-weight:600; font-family:monospace;">@g.CourseId</td>
+                            <td style="font-weight:700; color:#0F172A;">@g.CourseName</td>
+                            <td style="text-align:center;">@g.MidMarks</td>
+                            <td style="text-align:center;">@g.FinalMarks</td>
+                            <td style="text-align:center;">@g.AssignmentMarks</td>
+                            <td style="text-align:center; font-weight:700;">@g.TotalMarks</td>
+                            <td style="text-align:center;"><span class="g-tag" style="color:@gColor;">@g.GradeLetter</span></td>
+                            <td style="text-align:center; font-weight:700; color:@gColor;">@g.GPA.ToString("F1")</td>
+                        </tr>
+                        sr++;
+
+                    }
+                </tbody>
+            </table>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:25px; padding:15px; border:1px solid #CBD5E1; border-radius:8px; background:#F8FAFC;">
+                <div style="font-size:12px; color:#475569; font-weight:600;">
+                    Result Summary Block & Credit Analytics
+                </div>
+                <div style="display:flex; gap:15px;">
+                    <div class="metric-box"><div class="metric-val">@obtMarks.ToString("F0") / @maxMarks.ToString("F0")</div><div class="metric-lbl">Total Marks</div></div>
+                    <div class="metric-box"><div class="metric-val">@pctOverall.ToString("F1")%</div><div class="metric-lbl">Percentage</div></div>
+                    <div class="metric-box" style="border-color:#0B1E3E; background:#0B1E3E;"><div class="metric-val" style="color:#fff;">@sgpa.ToString("F2")</div><div class="metric-lbl" style="color:rgba(255,255,255,0.7)">Semester GPA</div></div>
+                </div>
+            </div>
+
+            <div style="margin-top:25px; font-size:11px; color:#64748B; line-height:1.5; border-top:1px dashed #CBD5E1; padding-top:15px;">
+                <p style="margin:0 0 4px;"><strong>Note:</strong> 1. Any omission or error in this statement is subject to correction later upon checking official records.</p>
+                <p style="margin:0;">2. Transcript verification can be cross-checked directly via the campus controller registrar panel system database.</p>
+            </div>
+
+            <div class="sig-space" style="margin-top:65px; display:flex; justify-content:space-between; align-items:flex-end;">
+                <div style="text-align:center; min-width:180px;">
+                    <div style="border-top:1px solid #64748B; padding-top:6px; font-size:12px; font-weight:700; color:#334155;">Student Signature</div>
+                    <div style="font-size:10px; color:#94A3B8; margin-top:1px;">Internal Verification Verification Token</div>
+                </div>
+                <div style="text-align:center; min-width:200px;">
+                    <div style="font-size:10px; font-weight:600; color:#1A6FD4; font-style:italic; margin-bottom:3px;">Digitally Certified Stamp</div>
+                    <div style="border-top:2px solid #0B1E3E; padding-top:6px; font-size:13px; font-weight:800; color:#0B1E3E; text-transform:uppercase; letter-spacing:0.5px;">Controller of Examinations</div>
+                    <div style="font-size:10px; color:#64748B; margin-top:1px;">Kahuta Institute of Technology (KICSIT)</div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@* Scripts inline bina section wrapper ke taki layout inject error na de *@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    function downloadTranscriptPDF() {
+        const element = document.getElementById('resultCard');
+        const opt = {
+            margin: [8, 8, 8, 8],
+            filename: 'KICSIT_Official_Transcript_Sem_@selSemester\.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+</script>

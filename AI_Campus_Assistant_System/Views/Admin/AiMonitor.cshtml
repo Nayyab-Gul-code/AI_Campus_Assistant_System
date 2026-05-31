@@ -1,0 +1,119 @@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "AI Monitor";
+    var queries = ViewBag.Queries as List<AI_Campus_Assistant.Models.ChatQuery> ?? new();
+}
+
+<div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:22px;">
+  <div class="stat-card">
+    <div class="sc-icon sci-purple"><i class="bi bi-robot"></i></div>
+    <div><div class="sc-val" data-count="@queries.Count">0</div><div class="sc-lbl">Total Queries</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-blue"><i class="bi bi-calendar-day-fill"></i></div>
+    <div><div class="sc-val" data-count="@ViewBag.TodayCount">0</div><div class="sc-lbl">Today's Queries</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-green"><i class="bi bi-people-fill"></i></div>
+    <div><div class="sc-val" data-count="@queries.Select(q=>q.UserId).Distinct().Count()">0</div><div class="sc-lbl">Unique Users</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-amber"><i class="bi bi-bar-chart-fill"></i></div>
+    <div>
+      <div class="sc-val">@(queries.Any() ? Math.Round(queries.Average(q => q.Question.Length)) : 0)</div>
+      <div class="sc-lbl">Avg Question Length</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-robot" style="color:#6C63FF;margin-right:6px;"></i>AI Chat Queries</span>
+    <input type="text" placeholder="Search queries..." id="qSearch"
+           oninput="filterTable(this,'qTable')"
+           style="width:220px;padding:7px 12px;border:1.5px solid #E2E8F0;border-radius:8px;font-size:13px;outline:none;font-family:'Inter',sans-serif;"/>
+  </div>
+  <div class="table-wrap">
+    <table id="qTable">
+      <thead>
+        <tr><th>User</th><th>Question</th><th>Answer Preview</th><th>Date</th></tr>
+      </thead>
+      <tbody>
+        @foreach (var q in queries)
+        {
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="width:32px;height:32px;border-radius:9px;background:#EDE9FE;color:#6C63FF;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;">
+                  @(q.UserName.Length > 0 ? q.UserName[0].ToString().ToUpper() : "?")
+                </div>
+                <div>
+                  <div style="font-weight:600;font-size:13px;">@q.UserName</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div style="max-width:280px;font-size:13px;color:#0F172A;cursor:pointer;"
+                   onclick="openModal('q-@q.Id')">
+                <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:270px;" title="@q.Question">
+                  @q.Question
+                </div>
+              </div>
+            </td>
+            <td>
+              <div style="max-width:260px;font-size:12.5px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="@q.Answer">
+                @(q.Answer.Length > 80 ? q.Answer.Substring(0, 80) + "…" : q.Answer)
+              </div>
+            </td>
+            <td style="font-size:12px;color:#94A3B8;white-space:nowrap;">@q.CreatedAt.ToString("MMM dd, HH:mm")</td>
+          </tr>
+
+          <!-- Detail Modal -->
+          <div class="modal-backdrop" id="q-@q.Id">
+            <div class="modal" style="max-width:560px;">
+              <div class="modal-title"><i class="bi bi-chat-square-text-fill" style="color:#6C63FF;margin-right:8px;"></i>Query Detail</div>
+              <div style="margin-bottom:14px;">
+                <div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;margin-bottom:5px;">Question</div>
+                <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;padding:12px;font-size:13.5px;color:#0F172A;line-height:1.6;">@q.Question</div>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;margin-bottom:5px;">AI Answer</div>
+                <div style="background:#EDE9FE;border:1px solid #C4B5FD;border-radius:9px;padding:12px;font-size:13px;color:#3730A3;line-height:1.7;max-height:200px;overflow-y:auto;">@q.Answer</div>
+              </div>
+              <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+                <div style="width:28px;height:28px;border-radius:8px;background:#EDE9FE;color:#6C63FF;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;">
+                  @(q.UserName.Length > 0 ? q.UserName[0].ToString().ToUpper() : "?")
+                </div>
+                <span style="font-size:12px;color:#64748B;font-weight:600;">@q.UserName</span>
+                <span style="font-size:11px;color:#94A3B8;margin-left:auto;">@q.CreatedAt.ToString("MMM dd, yyyy HH:mm")</span>
+              </div>
+              <div class="modal-footer">
+                <button onclick="closeModal('q-@q.Id')" class="btn btn-secondary">Close</button>
+              </div>
+            </div>
+          </div>
+        }
+      </tbody>
+    </table>
+    @if (!queries.Any())
+    {
+      <div class="empty-state">
+        <i class="bi bi-robot"></i>
+        <h4>No AI Queries Yet</h4>
+        <p>AI chat history will appear here once students start using the chat feature.</p>
+      </div>
+    }
+  </div>
+</div>
+
+<script src="/js/site.js"></script>
+<script>
+function filterTable(inp, tableId) {
+  const q = inp.value.toLowerCase();
+  document.querySelectorAll(`#${tableId} tbody tr:not([id^="q-"])`).forEach(r => {
+    if (!r.querySelector('.modal')) {
+      r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+    }
+  });
+}
+</script>

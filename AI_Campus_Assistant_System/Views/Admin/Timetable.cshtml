@@ -1,0 +1,200 @@
+@model List<AI_Campus_Assistant.Models.Timetable>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    ViewData["Title"] = "Timetable Management";
+
+    var courses = ViewBag.Courses as List<AI_Campus_Assistant.Models.Course> ?? new();
+
+    var days = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" };
+
+    var dayColors = new Dictionary<string, string>{
+        {"Monday","#1A6FD4"},{"Tuesday","#0D9069"},{"Wednesday","#6C63FF"},
+        {"Thursday","#D97706"},{"Friday","#E11D48"}
+    };
+}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+    <div>
+        <h5 style="font-weight:800;color:#0F172A;margin:0;">Timetable Management</h5>
+        <p style="color:#94A3B8;font-size:12px;margin:3px 0 0;">Mon–Fri | 8AM–3PM | Friday 1PM–2PM = Juma Break | Sat/Sun = OFF</p>
+    </div>
+    <button onclick="openModal('addTTModal')" class="btn btn-primary">
+        <i class="bi bi-plus-circle-fill"></i> Add Class Slot
+    </button>
+</div>
+
+<!-- Filters -->
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-body" style="padding:12px 16px;">
+        <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <div style="display:flex;flex-direction:column;gap:4px;">
+                <label class="form-label" style="margin:0;">Program</label>
+                <select name="program" class="form-control" style="width:150px;" onchange="this.form.submit()">
+                    <option value="">All Programs</option>
+                    @foreach (var p in new[] { "BSCS", "BSIT", "BBA", "MCS", "MIT", "MBA" })
+
+                    {
+                        <option value="@p" @(ViewBag.FilterProgram == p ? "selected" : "")>@p</option>
+                    }
+                </select>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+                <label class="form-label" style="margin:0;">Semester</label>
+                <select name="semNo" class="form-control" style="width:150px;" onchange="this.form.submit()">
+                    <option value="">All Semesters</option>
+                    @for (int i = 1; i <= 8; i++)
+
+                    {
+                        <option value="@i" @(ViewBag.FilterSem?.ToString() == i.ToString() ? "selected" : "")>Semester @i</option>
+                    }
+                </select>
+            </div>
+            <a href="/Admin/Timetable" class="btn btn-secondary btn-sm" style="margin-bottom:2px;">
+                <i class="bi bi-arrow-counterclockwise"></i> Reset
+            </a>
+        </form>
+    </div>
+</div>
+
+<!-- Rule Banner -->
+<div style="background:#FFFBEB;border:1.5px solid #D97706;border-radius:10px;padding:10px 16px;margin-bottom:16px;font-size:12.5px;color:#92400E;display:flex;align-items:center;gap:10px;">
+    <i class="bi bi-info-circle-fill" style="color:#D97706;font-size:16px;flex-shrink:0;"></i>
+    <span>
+        <strong>Rules:</strong> Classes only Mon–Fri, 8:00 AM – 3:00 PM.
+        <strong>Friday 1:00–2:00 PM = Juma Prayer Break</strong> (blocked).
+        Saturday &amp; Sunday = NO classes allowed.
+    </span>
+</div>
+
+@if (!Model.Any())
+
+{
+    <div class="card"><div class="empty-state"><i class="bi bi-calendar-week"></i><h4>No Timetable Entries</h4><p>Click "Add Class Slot" to start building the timetable.</p></div></div>
+}
+
+else
+
+{
+
+    foreach (var day in days)
+
+    {
+
+        var slots = Model.Where(t => t.DayOfWeek == day).OrderBy(t => t.StartTime).ToList();
+
+        if (!slots.Any()) continue;
+
+        var color = dayColors.ContainsKey(day) ? dayColors[day] : "#94A3B8";
+        <div class="card" style="margin-bottom:14px;">
+            <div class="card-header" style="border-left:4px solid @color;">
+                <span style="font-weight:800;font-size:14px;color:@color;">
+                    <i class="bi bi-calendar3" style="margin-right:6px;"></i>@day
+                    @if (day == "Friday")
+                    {
+                        <span style="font-size:11px;background:#FFF1F2;color:#E11D48;padding:2px 8px;border-radius:20px;margin-left:8px;border:1px solid #E11D48;"><i class="bi bi-moon-fill"></i> 1PM–2PM Juma Break</span>
+                    }
+                </span>
+                <span class="badge badge-info">@slots.Count class@(slots.Count > 1 ? "es" : "")</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Time Slot</th><th>Course</th><th>Program / Sem</th><th>Room</th><th>Teacher</th><th>Action</th></tr></thead>
+                    <tbody>
+                        @foreach (var t in slots)
+
+                        {
+                            <tr>
+                                <td><span style="font-weight:800;color:@color;font-size:13px;"><i class="bi bi-clock-fill"></i> @t.StartTime – @t.EndTime</span></td>
+                                <td><div style="font-weight:700;">@t.CourseName</div><div style="font-size:11px;color:#94A3B8;">@t.CourseCode</div></td>
+                                <td><span class="badge badge-success">@t.Program</span> <span class="badge badge-info">Sem @t.SemesterNo</span></td>
+                                <td><span class="badge badge-purple"><i class="bi bi-door-open-fill"></i> @t.Room</span></td>
+                                <td style="font-size:13px;">@t.TeacherName</td>
+                                <td>
+                                    <form method="post" action="/Admin/DeleteTimetable/@t.Id" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="button" class="btn btn-danger btn-sm"
+                                                onclick="if(confirm('Remove this slot?'))this.closest('form').submit()">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+}
+
+<!-- Add Timetable Modal -->
+<div class="modal-backdrop" id="addTTModal">
+    <div class="modal" style="max-width:560px;">
+        <div class="modal-title"><i class="bi bi-calendar-plus-fill" style="color:#6C63FF;margin-right:8px;"></i>Add Class Slot</div>
+        <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 13px;margin-bottom:16px;font-size:12.5px;color:#1E40AF;">
+            <i class="bi bi-info-circle-fill"></i> Time range: 8:00 AM – 3:00 PM only. Friday: avoid 1:00 PM – 2:00 PM (Juma).
+        </div>
+        <form method="post" action="/Admin/CreateTimetable">
+            @Html.AntiForgeryToken()
+            <div class="form-group">
+                <label class="form-label">Course *</label>
+                <select name="CourseId" id="ttCourse" class="form-control" required onchange="fillCourseInfo(this)">
+                    <option value="">— Select Course —</option>
+                    @foreach (var c in courses)
+
+                    {
+                        <option value="@c.Id" data-teacher="@c.TeacherId" data-tname="@c.TeacherName"
+                                data-prog="@c.Program" data-sem="@c.SemesterNo" data-code="@c.Code">
+                            @c.Title (@c.Code) — @c.Program Sem @c.SemesterNo
+                        </option>
+                    }
+                </select>
+            </div>
+            <div id="courseInfoBadge" style="display:none;background:#ECFDF5;border:1px solid #6EE7B7;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12.5px;color:#065F46;"></div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Day *</label>
+                    <select name="DayOfWeek" class="form-control" required>
+                        <option value="">— Select Day —</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday ⚠ (Juma 1–2PM)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Room *</label>
+                    <input type="text" name="Room" class="form-control" placeholder="e.g. CS-101, LH-3, Lab-2" required />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Start Time * (08:00–15:00)</label>
+                    <input type="time" name="StartTime" class="form-control" min="08:00" max="14:50" required />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">End Time *</label>
+                    <input type="time" name="EndTime" class="form-control" min="08:50" max="15:00" required />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('addTTModal')" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle-fill"></i> Add Slot</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function fillCourseInfo(sel) {
+        var opt = sel.options[sel.selectedIndex];
+        var badge = document.getElementById('courseInfoBadge');
+        if (sel.value) {
+            badge.style.display = 'block';
+            badge.innerHTML = '<i class="bi bi-check-circle-fill"></i> <strong>Program:</strong> ' + opt.dataset.prog +
+                ' | <strong>Semester:</strong> ' + opt.dataset.sem +
+                ' | <strong>Teacher:</strong> ' + (opt.dataset.tname || 'Not assigned');
+        } else { badge.style.display = 'none'; }
+    }
+</script>

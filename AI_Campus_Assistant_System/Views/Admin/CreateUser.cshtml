@@ -1,0 +1,130 @@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Create User";
+}
+
+<div style="max-width:680px;">
+  <div style="margin-bottom:16px;">
+    <a href="/Admin/Users" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to Users</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="bi bi-person-plus-fill" style="color:#6C63FF;margin-right:6px;"></i>Create New User</span>
+    </div>
+    <div class="card-body">
+      <form method="post" action="/Admin/CreateUser">
+        @Html.AntiForgeryToken()
+
+        <!-- Role selector -->
+        <div class="form-group">
+          <label class="form-label">Role <span style="color:#EF4444;">*</span></label>
+          <div style="display:flex;gap:10px;">
+            <label style="flex:1;border:2px solid #E2E8F0;border-radius:10px;padding:11px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.18s;" id="lbl-student">
+              <input type="radio" name="role" value="student" onchange="switchRole('student')" checked style="accent-color:#1A6FD4;width:16px;height:16px;"/>
+              <i class="bi bi-mortarboard-fill" style="color:#1A6FD4;font-size:17px;"></i>
+              <span style="font-weight:700;font-size:13px;color:#1A6FD4;">Student</span>
+            </label>
+            <label style="flex:1;border:2px solid #E2E8F0;border-radius:10px;padding:11px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.18s;" id="lbl-teacher">
+              <input type="radio" name="role" value="teacher" onchange="switchRole('teacher')" style="accent-color:#0D9069;width:16px;height:16px;"/>
+              <i class="bi bi-person-workspace" style="color:#0D9069;font-size:17px;"></i>
+              <span style="font-weight:700;font-size:13px;color:#0D9069;">Teacher</span>
+            </label>
+            <label style="flex:1;border:2px solid #E2E8F0;border-radius:10px;padding:11px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.18s;" id="lbl-admin">
+              <input type="radio" name="role" value="admin" onchange="switchRole('admin')" style="accent-color:#6C63FF;width:16px;height:16px;"/>
+              <i class="bi bi-shield-fill-check" style="color:#6C63FF;font-size:17px;"></i>
+              <span style="font-weight:700;font-size:13px;color:#6C63FF;">Admin</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Full Name <span style="color:#EF4444;">*</span></label>
+            <input type="text" name="Name" class="form-control" placeholder="Full name" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email <span style="color:#EF4444;">*</span></label>
+            <input type="email" name="Email" class="form-control" placeholder="email@example.com" required/>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Password <span style="color:#EF4444;">*</span></label>
+            <input type="password" name="password" class="form-control" placeholder="Min 6 characters" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" name="Phone" class="form-control" placeholder="+92 300 0000000"/>
+          </div>
+        </div>
+
+        <!-- Student fields -->
+        <div id="studentSection">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Program</label>
+              <select name="Program" class="form-control" id="progSel" onchange="updateSems()">
+                <option value="">Select Program</option>
+                <option value="BSCS">BSCS</option>
+                <option value="BSCE">BSCE</option>
+                <option value="BSIT">BSIT</option>
+                <option value="MS CS">MS CS</option>
+                <option value="MBA">MBA</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Semester</label>
+              <select name="SemesterNo" class="form-control" id="semSel">
+                <option value="">Select Semester</option>
+                @for(int s=1;s<=8;s++){
+                  <option value="@s">Semester @s</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teacher fields -->
+        <div id="teacherSection" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Designation</label>
+            <input type="text" name="Designation" class="form-control" placeholder="Lecturer, Assistant Professor, Professor..."/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Bio</label>
+          <textarea name="Bio" class="form-control" rows="2" placeholder="Short bio (optional)..." style="resize:vertical;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;color:#374151;font-weight:600;">
+            <input type="checkbox" name="IsActive" value="true" checked style="width:16px;height:16px;accent-color:#6C63FF;"/>
+            Account Active
+          </label>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:4px;">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-person-plus-fill"></i> Create User</button>
+          <a href="/Admin/Users" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchRole(r) {
+  document.getElementById('studentSection').style.display = r==='student'?'':'none';
+  document.getElementById('teacherSection').style.display = r==='teacher'?'':'none';
+}
+function updateSems() {
+  const p = document.getElementById('progSel').value;
+  const s = document.getElementById('semSel');
+  const max = (p==='MS CS'||p==='MBA') ? 4 : 8;
+  s.innerHTML = '<option value="">Select Semester</option>';
+  for(let i=1;i<=max;i++) s.innerHTML += `<option value="${i}">Semester ${i}</option>`;
+}
+</script>
