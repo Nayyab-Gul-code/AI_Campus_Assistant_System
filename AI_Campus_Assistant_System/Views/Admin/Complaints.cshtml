@@ -1,0 +1,137 @@
+@model List<AI_Campus_Assistant.Models.Complaint>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Complaints";
+    var pending  = Model.Count(c => c.Status == "pending");
+    var resolved = Model.Count(c => c.Status == "resolved");
+}
+
+<div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:22px;">
+  <div class="stat-card">
+    <div class="sc-icon sci-amber"><i class="bi bi-hourglass-split"></i></div>
+    <div><div class="sc-val" data-count="@pending">0</div><div class="sc-lbl">Pending</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-green"><i class="bi bi-check-circle-fill"></i></div>
+    <div><div class="sc-val" data-count="@resolved">0</div><div class="sc-lbl">Resolved</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-blue"><i class="bi bi-chat-square-text-fill"></i></div>
+    <div><div class="sc-val" data-count="@Model.Count">0</div><div class="sc-lbl">Total</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-chat-square-text-fill" style="color:#D97706;margin-right:6px;"></i>All Complaints</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>User</th><th>Subject</th><th>Role</th><th>Status</th><th>Date</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        @foreach (var c in Model)
+        {
+          <tr>
+            <td>
+              <div style="font-weight:700;font-size:13.5px;">@c.UserName</div>
+            </td>
+            <td>
+              <div style="font-weight:600;font-size:13.5px;cursor:pointer;color:#1A6FD4;"
+                   onclick="openModal('cp-@c.Id')">@c.Subject</div>
+              <div style="font-size:11.5px;color:#94A3B8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px;">@c.Description</div>
+            </td>
+            <td>
+              @if(c.UserRole=="student"){<span class="badge badge-info">Student</span>}
+              else{<span class="badge badge-success">Teacher</span>}
+            </td>
+            <td>
+              @if(c.Status=="pending"){<span class="badge badge-warning"><i class="bi bi-hourglass-split"></i> Pending</span>}
+              else if(c.Status=="resolved"){<span class="badge badge-success"><i class="bi bi-check-circle-fill"></i> Resolved</span>}
+              else{<span class="badge badge-info">Reviewing</span>}
+            </td>
+            <td style="font-size:12px;color:#94A3B8;">@c.CreatedAt.ToString("MMM dd, yyyy")</td>
+            <td>
+              @if(c.Status=="pending")
+              {
+                <button onclick="openModal('resolve-@c.Id')" class="btn btn-success btn-sm">
+                  <i class="bi bi-check-lg"></i> Resolve
+                </button>
+              }
+              else
+              {
+                <span style="font-size:12px;color:#94A3B8;"><i class="bi bi-check-circle-fill" style="color:#0D9069;"></i> Done</span>
+              }
+            </td>
+          </tr>
+
+          <!-- View Detail Modal -->
+          <div class="modal-backdrop" id="cp-@c.Id">
+            <div class="modal" style="max-width:520px;">
+              <div class="modal-title"><i class="bi bi-chat-square-text-fill" style="color:#D97706;margin-right:8px;"></i>Complaint Detail</div>
+              <div style="margin-bottom:12px;">
+                <div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;margin-bottom:4px;">Subject</div>
+                <div style="font-size:15px;font-weight:700;color:#0F172A;">@c.Subject</div>
+              </div>
+              <div style="margin-bottom:12px;">
+                <div style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;margin-bottom:4px;">Description</div>
+                <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;padding:12px;font-size:13.5px;color:#0F172A;line-height:1.65;">@c.Description</div>
+              </div>
+              @if (!string.IsNullOrEmpty(c.AdminReply))
+              {
+                <div style="margin-bottom:12px;">
+                  <div style="font-size:11px;font-weight:700;color:#0D9069;text-transform:uppercase;margin-bottom:4px;">Admin Reply</div>
+                  <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:9px;padding:12px;font-size:13.5px;color:#065F46;line-height:1.65;">@c.AdminReply</div>
+                </div>
+              }
+              <div style="display:flex;gap:10px;font-size:12px;color:#64748B;">
+                <span><i class="bi bi-person-fill"></i> @c.UserName (@c.UserRole)</span>
+                <span><i class="bi bi-calendar3"></i> @c.CreatedAt.ToString("MMM dd, yyyy")</span>
+              </div>
+              <div class="modal-footer">
+                <button onclick="closeModal('cp-@c.Id')" class="btn btn-secondary">Close</button>
+                @if(c.Status=="pending")
+                {
+                  <button onclick="closeModal('cp-@c.Id');openModal('resolve-@c.Id')" class="btn btn-success">Resolve</button>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Resolve Modal -->
+          <div class="modal-backdrop" id="resolve-@c.Id">
+            <div class="modal" style="max-width:460px;">
+              <div class="modal-title"><i class="bi bi-check-circle-fill" style="color:#0D9069;margin-right:8px;"></i>Resolve Complaint</div>
+              <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:9px;padding:10px 13px;margin-bottom:14px;font-size:13px;color:#92400E;">
+                <strong>@c.Subject</strong> — by @c.UserName
+              </div>
+              <form method="post" action="/Admin/ResolveComplaint/@c.Id">
+                @Html.AntiForgeryToken()
+                <div class="form-group">
+                  <label class="form-label">Admin Reply *</label>
+                  <textarea name="adminReply" class="form-control" rows="4"
+                            placeholder="Write your response to this complaint..."
+                            required style="resize:vertical;"></textarea>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" onclick="closeModal('resolve-@c.Id')" class="btn btn-secondary">Cancel</button>
+                  <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Mark Resolved</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        }
+      </tbody>
+    </table>
+    @if (!Model.Any())
+    {
+      <div class="empty-state">
+        <i class="bi bi-chat-square-text"></i>
+        <h4>No Complaints</h4>
+        <p>All complaints from students and teachers will appear here.</p>
+      </div>
+    }
+  </div>
+</div>
+<script src="/js/site.js"></script>

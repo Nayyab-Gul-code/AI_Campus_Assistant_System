@@ -1,0 +1,174 @@
+@model List<AI_Campus_Assistant.Models.Department>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Departments";
+}
+
+<div style="display:flex;justify-content:flex-end;margin-bottom:18px;">
+  <button onclick="openModal('addDeptModal')" class="btn btn-primary">
+    <i class="bi bi-plus-circle-fill"></i> Add Department
+  </button>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-bottom:24px;">
+  @foreach (var d in Model)
+  {
+    var semLabel = d.TotalSemesters == 4 ? "4 Semesters (MS/MBA)" : "8 Semesters (BS)";
+    var cardColor = d.TotalSemesters == 4 ? "#EDE9FE" : "#EFF6FF";
+    var iconColor = d.TotalSemesters == 4 ? "#6C63FF" : "#1A6FD4";
+    <div class="stat-card" style="flex-direction:column;align-items:flex-start;gap:0;padding:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:46px;height:46px;border-radius:12px;background:@cardColor;color:@iconColor;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">
+            <i class="bi bi-building"></i>
+          </div>
+          <div>
+            <div style="font-size:17px;font-weight:800;color:#0F172A;">@d.Name</div>
+            <div style="font-size:12px;color:#94A3B8;font-weight:600;letter-spacing:.5px;">@d.Code</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="openEditDept('@d.Id','@d.Name','@d.Code','@d.Description','@d.HeadName','@d.TotalSemesters','@d.IsActive')"
+                  class="btn btn-secondary btn-sm"><i class="bi bi-pencil-fill"></i></button>
+          <form id="dd-@d.Id" method="post" action="/Admin/DeleteDepartment/@d.Id" style="display:inline;">
+            @Html.AntiForgeryToken()
+            <button type="button" class="btn btn-danger btn-sm"
+                    onclick="confirmDelete('dd-@d.Id','@d.Name')">
+              <i class="bi bi-trash-fill"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+      @if (!string.IsNullOrEmpty(d.Description))
+      {
+        <p style="font-size:12.5px;color:#64748B;margin-bottom:12px;line-height:1.5;">@d.Description</p>
+      }
+      <div style="display:flex;gap:8px;flex-wrap:wrap;width:100%;">
+        <span class="badge badge-info"><i class="bi bi-layers-fill"></i> @semLabel</span>
+        @if (!string.IsNullOrEmpty(d.HeadName))
+        {
+          <span class="badge badge-purple"><i class="bi bi-person-fill"></i> @d.HeadName</span>
+        }
+        @if (d.IsActive)
+        { <span class="badge badge-success">Active</span> }
+        else
+        { <span class="badge badge-danger">Inactive</span> }
+      </div>
+    </div>
+  }
+  @if (!Model.Any())
+  {
+    <div class="card" style="grid-column:1/-1;">
+      <div class="empty-state"><i class="bi bi-building"></i><h4>No Departments</h4><p>Add your first department to get started.</p></div>
+    </div>
+  }
+</div>
+
+<!-- Add Department Modal -->
+<div class="modal-backdrop" id="addDeptModal">
+  <div class="modal">
+    <div class="modal-title"><i class="bi bi-building" style="color:#6C63FF;margin-right:8px;"></i>Add Department</div>
+    <form method="post" action="/Admin/CreateDepartment">
+      @Html.AntiForgeryToken()
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Department Name *</label>
+          <input type="text" name="Name" class="form-control" placeholder="e.g. BSCS" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Code *</label>
+          <input type="text" name="Code" class="form-control" placeholder="e.g. CS" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea name="Description" class="form-control" rows="2" placeholder="Brief description..." style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Head Name</label>
+          <input type="text" name="HeadName" class="form-control" placeholder="Department head name"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Total Semesters *</label>
+          <select name="TotalSemesters" class="form-control" required>
+            <option value="8">8 Semesters (BS Programs)</option>
+            <option value="4">4 Semesters (MS / MBA)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:13.5px;color:#374151;">
+          <input type="checkbox" name="IsActive" value="true" checked style="width:15px;height:15px;accent-color:#6C63FF;"/>
+          Active Department
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="closeModal('addDeptModal')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle-fill"></i> Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Department Modal -->
+<div class="modal-backdrop" id="editDeptModal">
+  <div class="modal">
+    <div class="modal-title"><i class="bi bi-pencil-fill" style="color:#6C63FF;margin-right:8px;"></i>Edit Department</div>
+    <form method="post" action="/Admin/EditDepartment" id="editDeptForm">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="Id" id="editDeptId"/>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Department Name *</label>
+          <input type="text" name="Name" id="editDeptName" class="form-control" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Code *</label>
+          <input type="text" name="Code" id="editDeptCode" class="form-control" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea name="Description" id="editDeptDesc" class="form-control" rows="2" style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Head Name</label>
+          <input type="text" name="HeadName" id="editDeptHead" class="form-control"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Total Semesters</label>
+          <select name="TotalSemesters" id="editDeptSems" class="form-control">
+            <option value="8">8 Semesters (BS)</option>
+            <option value="4">4 Semesters (MS/MBA)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:13.5px;color:#374151;">
+          <input type="checkbox" name="IsActive" id="editDeptActive" value="true" style="width:15px;height:15px;accent-color:#6C63FF;"/>
+          Active
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="closeModal('editDeptModal')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/site.js"></script>
+<script>
+function openEditDept(id,name,code,desc,head,sems,active) {
+  document.getElementById('editDeptId').value    = id;
+  document.getElementById('editDeptName').value  = name;
+  document.getElementById('editDeptCode').value  = code;
+  document.getElementById('editDeptDesc').value  = desc;
+  document.getElementById('editDeptHead').value  = head;
+  document.getElementById('editDeptSems').value  = sems;
+  document.getElementById('editDeptActive').checked = active==='True';
+  openModal('editDeptModal');
+}
+</script>

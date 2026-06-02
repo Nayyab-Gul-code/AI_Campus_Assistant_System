@@ -1,0 +1,109 @@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Create Course";
+    var depts    = ViewBag.Departments as List<AI_Campus_Assistant.Models.Department> ?? new();
+    var teachers = ViewBag.Teachers   as List<AI_Campus_Assistant.Models.User>       ?? new();
+}
+
+<div style="max-width:660px;">
+  <div style="margin-bottom:16px;">
+    <a href="/Admin/Courses" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to Courses</a>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="bi bi-plus-circle-fill" style="color:#6C63FF;margin-right:6px;"></i>Create New Course</span>
+    </div>
+    <div class="card-body">
+      <form method="post" action="/Admin/CreateCourse">
+        @Html.AntiForgeryToken()
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Course Title *</label>
+            <input type="text" name="Title" class="form-control" placeholder="e.g. Data Structures" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Course Code *</label>
+            <input type="text" name="Code" class="form-control" placeholder="e.g. CS-202" required/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea name="Description" class="form-control" rows="2" style="resize:vertical;" placeholder="Course description..."></textarea>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Program *</label>
+            <select name="Program" class="form-control" id="cprog" onchange="updateCourseSems()" required>
+              <option value="">Select Program</option>
+              <option value="BSCS">BSCS</option>
+              <option value="BSCE">BSCE</option>
+              <option value="BSIT">BSIT</option>
+              <option value="MS CS">MS CS</option>
+              <option value="MBA">MBA</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Semester *</label>
+            <select name="SemesterNo" class="form-control" id="csem" required>
+              <option value="">Select Semester</option>
+              @for(int s=1;s<=8;s++){ <option value="@s">Semester @s</option> }
+            </select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Department</label>
+            <select name="DepartmentName" class="form-control">
+              <option value="">— Select Department —</option>
+              @foreach (var d in depts)
+              { <option value="@d.Name">@d.Name</option> }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Assign Teacher</label>
+            <select name="TeacherId" class="form-control" onchange="setTeacherName(this)">
+              <option value="">— Unassigned —</option>
+              @foreach (var t in teachers)
+              { <option value="@t.Id" data-name="@t.Name">@t.Name (@(t.Designation ?? "Teacher"))</option> }
+            </select>
+            <input type="hidden" name="TeacherName" id="teacherNameHidden"/>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Credits</label>
+            <select name="Credits" class="form-control">
+              <option value="1">1 Credit</option>
+              <option value="2">2 Credits</option>
+              <option value="3" selected>3 Credits</option>
+              <option value="4">4 Credits</option>
+            </select>
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-end;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:13.5px;color:#374151;padding-bottom:4px;">
+              <input type="checkbox" name="IsActive" value="true" checked style="width:15px;height:15px;accent-color:#6C63FF;"/>
+              Active Course
+            </label>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px;">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle-fill"></i> Create Course</button>
+          <a href="/Admin/Courses" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+function updateCourseSems() {
+  const p = document.getElementById('cprog').value;
+  const s = document.getElementById('csem');
+  const max = (p==='MS CS'||p==='MBA') ? 4 : 8;
+  s.innerHTML = '<option value="">Select Semester</option>';
+  for(let i=1;i<=max;i++) s.innerHTML += `<option value="${i}">Semester ${i}</option>`;
+}
+function setTeacherName(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  document.getElementById('teacherNameHidden').value = opt.dataset.name || '';
+}
+</script>
