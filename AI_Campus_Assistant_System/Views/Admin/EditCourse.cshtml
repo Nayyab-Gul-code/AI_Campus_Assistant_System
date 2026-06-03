@@ -1,0 +1,97 @@
+@model AI_Campus_Assistant.Models.Course
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Edit Course";
+    var depts    = ViewBag.Departments as List<AI_Campus_Assistant.Models.Department> ?? new();
+    var teachers = ViewBag.Teachers   as List<AI_Campus_Assistant.Models.User>       ?? new();
+}
+
+<div style="max-width:660px;">
+  <div style="margin-bottom:16px;">
+    <a href="/Admin/Courses" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to Courses</a>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="bi bi-pencil-fill" style="color:#6C63FF;margin-right:6px;"></i>Edit: @Model.Title</span>
+      <span class="badge badge-info">@Model.Code</span>
+    </div>
+    <div class="card-body">
+      <form method="post" action="/Admin/EditCourse/@Model.Id">
+        @Html.AntiForgeryToken()
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Course Title *</label>
+            <input type="text" name="Title" class="form-control" value="@Model.Title" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Course Code *</label>
+            <input type="text" name="Code" class="form-control" value="@Model.Code" required/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea name="Description" class="form-control" rows="2" style="resize:vertical;">@Model.Description</textarea>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Program *</label>
+            <select name="Program" class="form-control" required>
+              @foreach (var p in new[]{"BSCS","BSCE","BSIT","MS CS","MBA"})
+              { <option value="@p" @(Model.Program==p?"selected":"")>@p</option> }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Semester *</label>
+            <select name="SemesterNo" class="form-control" required>
+              @for(int s=1;s<=8;s++)
+              { <option value="@s" @(Model.SemesterNo==s?"selected":"")>Semester @s</option> }
+            </select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Department</label>
+            <select name="DepartmentName" class="form-control">
+              <option value="">— Select —</option>
+              @foreach (var d in depts)
+              { <option value="@d.Name" @(Model.DepartmentName==d.Name?"selected":"")>@d.Name</option> }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Teacher</label>
+            <select name="TeacherId" class="form-control" onchange="setTeacherName(this)">
+              <option value="">— Unassigned —</option>
+              @foreach (var t in teachers)
+              { <option value="@t.Id" data-name="@t.Name" @(Model.TeacherId==t.Id?"selected":"")>@t.Name</option> }
+            </select>
+            <input type="hidden" name="TeacherName" id="tnh" value="@Model.TeacherName"/>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Credits</label>
+            <select name="Credits" class="form-control">
+              @foreach (var c in new[]{1,2,3,4})
+              { <option value="@c" @(Model.Credits==c?"selected":"")>@c Credit@(c>1?"s":"")</option> }
+            </select>
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-end;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:13.5px;color:#374151;padding-bottom:4px;">
+              <input type="checkbox" name="IsActive" value="true" @(Model.IsActive?"checked":"") style="width:15px;height:15px;accent-color:#6C63FF;"/>
+              Active
+            </label>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px;">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save Changes</button>
+          <a href="/Admin/Courses" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+function setTeacherName(sel) {
+  document.getElementById('tnh').value = sel.options[sel.selectedIndex].dataset.name || '';
+}
+</script>

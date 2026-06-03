@@ -1,0 +1,325 @@
+FAQs.cshtml
+
+
+@model List<AI_Campus_Assistant.Models.FAQ>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    ViewData["Title"] = "FAQ Management";
+}
+
+<style>
+    .faq-table th {
+        background: #1A6FD4;
+        color: #fff;
+        font-size: 13px;
+    }
+
+    .faq-table td {
+        font-size: 13px;
+        vertical-align: middle;
+    }
+
+    .badge-active {
+        background: #D1FAE5;
+        color: #065F46;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11.5px;
+        font-weight: 700;
+    }
+
+    .badge-inactive {
+        background: #FEE2E2;
+        color: #991B1B;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11.5px;
+        font-weight: 700;
+    }
+
+    .kw-badge {
+        background: #EFF6FF;
+        color: #1A6FD4;
+        border: 1px solid #BFDBFE;
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 11px;
+        display: inline-block;
+        margin: 2px;
+    }
+
+    /* Professional Premium Overlay */
+    .custom-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.6); /* Modern slate backdrop overlay */
+        backdrop-filter: blur(4px); /* Premium blur effect */
+        z-index: 9999;
+        overflow-y: auto;
+    }
+
+    /* Animated Custom Modal Content */
+    .custom-modal-content {
+        background: #fff;
+        border-radius: 16px;
+        padding: 32px 35px;
+        max-width: 650px;
+        width: 90%;
+        margin: 50px auto;
+        position: relative;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border: 1px solid #E2E8F0;
+        transform: translateY(-20px);
+        opacity: 0;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    /* Modal show state triggered via JS */
+    .custom-modal-overlay.show-modal .custom-modal-content {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    /* Enhanced Form Controls Styling */
+    .modern-form .form-label {
+        font-size: 14px;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+
+    .modern-form .form-control,
+    .modern-form .form-select {
+        border-radius: 8px;
+        border: 1px solid #CBD5E1;
+        padding: 10px 14px;
+        font-size: 14px;
+        color: #1E293B;
+        transition: all 0.2s ease;
+    }
+
+        .modern-form .form-control:focus,
+        .modern-form .form-select:focus {
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+            outline: none;
+        }
+
+    .modern-form .form-text {
+        font-size: 12px;
+        color: #64748B;
+        margin-top: 5px;
+    }
+
+    /* Elegant Close Button */
+    .modal-close-btn {
+        background: #F1F5F9;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748B;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+        .modal-close-btn:hover {
+            background: #E2E8F0;
+            color: #0F172A;
+        }
+</style>
+
+@if (TempData["Success"] != null)
+
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <div>
+        <h4 style="font-weight:800;color:#0F172A;margin:0;">FAQ Management</h4>
+        <div style="font-size:12.5px;color:#64748B;">Admin-defined FAQs — answered via keyword match (no AI call)</div>
+    </div>
+
+    <button type="button" onclick="openFaqForm()" class="btn btn-primary">
+        <i class="bi bi-plus-circle-fill"></i> Add FAQ
+    </button>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 faq-table">
+            <thead>
+                <tr>
+                    <th style="width:25%">Question</th>
+                    <th style="width:28%">Answer</th>
+                    <th style="width:20%">Keywords</th>
+                    <th style="width:10%">Category</th>
+                    <th style="width:8%">Status</th>
+                    <th style="width:9%">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+
+                {
+                    <tr><td colspan="6" class="text-center py-4 text-muted">No FAQs yet. Click "Add FAQ" to create one.</td></tr>
+                }
+                @foreach (var f in Model)
+
+                {
+                    <tr>
+                        <td><strong>@f.Question</strong></td>
+                        <td style="color:#374151;">@(f.Answer.Length > 80 ? f.Answer.Substring(0, 80) + "…" : f.Answer)</td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(f.Keywords))
+
+                            {
+
+                                foreach (var kw in f.Keywords.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+
+                                {
+                                    <span class="kw-badge">@kw</span>
+                                }
+
+                            }
+
+                            else
+                            {
+                                <span style="color:#94A3B8;font-size:11.5px;">—</span>
+                            }
+                        </td>
+                        <td><span class="badge bg-secondary">@f.Category</span></td>
+                        <td>
+                            @if (f.IsActive)
+
+                            {
+                                <span class="badge-active">Active</span>
+                            }
+
+                            else
+
+                            {
+                                <span class="badge-inactive">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1 flex-wrap">
+                                <a href="/Admin/EditFAQ/@f.Id" class="btn btn-sm btn-outline-primary py-0 px-2" title="Edit">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </a>
+                                <form method="post" action="/Admin/ToggleFAQ" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@f.Id" />
+                                    <button class="btn btn-sm @(f.IsActive ? "btn-outline-warning" : "btn-outline-success") py-0 px-2"
+                                            title="@(f.IsActive ? "Deactivate" : "Activate")">
+                                        <i class="bi @(f.IsActive ? "bi-eye-slash" : "bi-eye")"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="/Admin/DeleteFAQ" style="display:inline;"
+                                      onsubmit="return confirm('Delete this FAQ?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@f.Id" />
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" title="Delete">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="custom-modal-overlay" id="faqFormOverlay">
+    <div class="custom-modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #F1F5F9; padding-bottom: 15px;">
+            <div style="font-size:18px; font-weight:800; color:#0F172A; display:flex; align-items:center; gap:8px;">
+                <i class="bi bi-question-circle-fill" style="color:#1A6FD4; font-size:20px;"></i> Add New FAQ
+            </div>
+            <button type="button" onclick="closeFaqForm()" class="modal-close-btn" aria-label="Close">
+                <i class="bi bi-x-lg" style="font-size: 14px; -webkit-text-stroke: 0.5px;"></i>
+            </button>
+        </div>
+
+        <form method="post" action="/Admin/CreateFAQ" class="modern-form">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Question <span class="text-danger">*</span></label>
+                <input name="Question" class="form-control" placeholder="e.g. What is the fee structure?" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Answer <span class="text-danger">*</span></label>
+                <textarea name="Answer" class="form-control" rows="4" placeholder="Type the full answer here..." required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Keywords
+                    <span style="font-size:12px; color:#64748B; font-weight:400; margin-left:4px;">(comma-separated)</span>
+                </label>
+                <input name="Keywords" class="form-control" placeholder="fee,fees,challan,payment,tuition" />
+                <div class="form-text"><i class="bi bi-info-circle me-1"></i> If a student's or teacher's question matches these keywords, this specific FAQ answer will be provided.</div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Category</label>
+                <select name="Category" class="form-select">
+                    <option value="general">General</option>
+                    <option value="fee">Fee</option>
+                    <option value="admission">Admission</option>
+                    <option value="exam">Exam</option>
+                    <option value="attendance">Attendance</option>
+                    <option value="schedule">Schedule / Timetable</option>
+                    <option value="rules">Campus Rules</option>
+                    <option value="hostel">Hostel</option>
+                    <option value="transport">Transport</option>
+                </select>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end" style="border-top: 1px solid #F1F5F9; padding-top: 20px; margin-top: 10px;">
+                <button type="button" onclick="closeFaqForm()" class="btn btn-light" style="border: 1px solid #CBD5E1; font-weight: 500;">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="font-weight: 500; background: #1A6FD4;"><i class="bi bi-check-lg me-1"></i> Save FAQ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openFaqForm() {
+        var overlay = document.getElementById('faqFormOverlay');
+        overlay.style.display = 'block';
+        // Halka sa delay taake CSS transition slide-down trigger ho sake
+        setTimeout(function () {
+            overlay.classList.add('show-modal');
+        }, 10);
+    }
+
+    function closeFaqForm() {
+        var overlay = document.getElementById('faqFormOverlay');
+        overlay.classList.remove('show-modal');
+        // Transition complete hone ka wait karein phir display none karein
+        setTimeout(function () {
+            overlay.style.display = 'none';
+        }, 300);
+    }
+
+    // Agar modal overlay se bahar click ho to close ho jaye
+    window.onclick = function (event) {
+        var overlay = document.getElementById('faqFormOverlay');
+        if (event.target == overlay) {
+            closeFaqForm();
+        }
+    }
+</script>
