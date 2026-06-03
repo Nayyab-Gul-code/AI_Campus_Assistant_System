@@ -149,7 +149,7 @@ AI_Campus_Assistant_System/
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/your-username/AI_Campus_Assistant_System..git
+git clone https://github.com/Nayyab-Gul-code/AI_Campus_Assistant_System.git
 cd AI_Campus_Assistant_System/AI_Campus_Assistant_System
 ```
 
