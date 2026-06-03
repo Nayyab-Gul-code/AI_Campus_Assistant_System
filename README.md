@@ -1,6 +1,6 @@
 # 🎓 AI Campus Assistant System
 
-A full-stack **Smart University Campus Management System** built with **ASP.NET Core 8 MVC**, **MongoDB**, and **Google Gemini Pro AI**. The platform automates academic and administrative operations for a university, supporting three roles: **Admin**, **Teacher**, and **Student**.
+A full-stack **Smart University Campus Management System** built with **ASP.NET Core 8 MVC**, **MongoDB**, and **Google Gemini API**. The platform automates academic and administrative operations for a university, supporting three roles: **Admin**, **Teacher**, and **Student**.
 
 ---
 
