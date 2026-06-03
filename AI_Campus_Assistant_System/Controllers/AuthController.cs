@@ -2,7 +2,6 @@ using AI_Campus_Assistant.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-
 namespace AI_Campus_Assistant.Controllers
 {
     public class AuthController : Controller
