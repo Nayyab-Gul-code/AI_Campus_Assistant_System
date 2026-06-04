@@ -17,6 +17,7 @@ WORKDIR /app
 COPY --from=build /app/publish .
 EXPOSE 80
 <<<<<<< HEAD
+<<<<<<< HEAD
 ENTRYPOINT ["dotnet", "AI_Campus_Assistant_System.dll"]
 =======
 <<<<<<< Updated upstream
@@ -25,3 +26,9 @@ ENTRYPOINT ["dotnet", "AI_Final_Campus_Assistant.dll"]
 ENTRYPOINT ["dotnet", "AI_Campus_Assistant.dll"]
 >>>>>>> Stashed changes
 >>>>>>> f1a3adaf3b9e1d8dcbdf92dfe19c32e92791316c
+=======
+
+
+ENTRYPOINT ["dotnet", "AI_Campus_Assistant.dll"]
+
+>>>>>>> 9218f6b2885240b92e8f9a0f20cad21b558134b5

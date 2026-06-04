@@ -1,108 +1,163 @@
 @{
     Layout = "~/Views/Shared/_TeacherLayout.cshtml";
-
     ViewData["Title"] = "Quiz / Assignment Generator";
 
-    var courses = ViewBag.Courses as List<AI_Campus_Assistant.Models.Course> ?? new();
-
+    // Casting checking setup to bypass compiler schema error
+    var courses = ViewBag.Courses as IEnumerable<dynamic> ?? new List<dynamic>();
     var generated = ViewBag.Generated as string;
-
     var solutions = ViewBag.Solutions as string;
-
     var genType = ViewBag.Type as string ?? "quiz";
-
     var topic = ViewBag.Topic as string ?? "";
 }
 
 <style>
+    /* Clean Dashboard Aesthetics */
     .gen-card {
-        background: #fff;
-        border-radius: 14px;
-        border: 1px solid #E2E8F0;
-        padding: 28px;
-    }
-
-    .result-box {
-        background: #F8FAFF;
-        border: 1.5px solid #BFDBFE;
+        background: #ffffff;
         border-radius: 12px;
-        padding: 20px 24px;
-        font-size: 14px;
-        line-height: 1.8;
-        white-space: pre-wrap;
-        color: #1e293b;
-        min-height: 200px;
+        border: 1px solid #e2e8f0;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
+    /* Matching Sidebar Portal Accent (Active: Green/Teal Tone) */
     .tab-btn {
-        padding: 9px 22px;
-        border-radius: 8px;
-        border: 1.5px solid #E2E8F0;
-        background: #fff;
-        font-size: 13.5px;
-        font-weight: 700;
+        padding: 8px 20px;
+        border-radius: 6px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        font-size: 14px;
+        font-weight: 600;
         cursor: pointer;
-        color: #64748B;
-        transition: .2s;
+        color: #475569;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
 
-        .tab-btn.active {
-            background: #1A6FD4;
-            color: #fff;
-            border-color: #1A6FD4;
+        .tab-btn:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
         }
 
-    .spinner-border {
-        width: 1rem;
-        height: 1rem;
-        margin-right: 5px;
+        .tab-btn.active {
+            background: #115e59; /* Matching green shade */
+            color: #ffffff;
+            border-color: #115e59;
+        }
+
+    /* Core Portal Layout Inputs */
+    .form-label {
+        font-size: 13.5px;
+        color: #334155;
+        margin-bottom: 6px;
+    }
+
+    .form-control, .form-select {
+        border-color: #cbd5e1;
+        border-radius: 6px;
+        font-size: 14.5px;
+        padding: 9px 12px;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #115e59;
+            box-shadow: 0 0 0 3px rgba(17, 94, 89, 0.15);
+        }
+
+    /* Clean Styled Response Window */
+    .result-box {
+        background: #fafafa;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 20px;
+        font-size: 14px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        color: #1e293b;
+        min-height: 380px;
+    }
+
+    /* Action Trigger Primary Class */
+    .btn-portal-primary {
+        background: #115e59;
+        color: #ffffff;
+        font-weight: 600;
+        border-radius: 6px;
+        padding: 10px 20px;
+        border: none;
+        transition: background 0.2s;
+    }
+
+        .btn-portal-primary:hover {
+            background: #0f766e;
+            color: #ffffff;
+        }
+
+        .btn-portal-primary:disabled {
+            background: #94a3b8;
+        }
+
+    .section-divider {
+        border-top: 1px dashed #cbd5e1;
+        margin: 24px 0;
     }
 </style>
 
-<div style="margin-bottom:22px;">
-    <h4 style="font-weight:800;color:#0F172A;margin:0;"><i class="bi bi-cpu-fill" style="color:#1A6FD4;"></i> AI Content Generator</h4>
+<div class="mb-4">
+    <h4 style="font-weight:700; color:#0F172A; margin:0; display:flex; align-items:center; gap:8px;">
+        <i class="bi bi-cpu-fill" style="color:#115e59;"></i> AI Content Generator
+    </h4>
 </div>
 
 <div class="row g-4">
     <div class="col-lg-5">
-        <div class="gen-card shadow-sm">
+        <div class="gen-card">
             <form method="post" action="/Teacher/Generate" id="aiForm">
                 @Html.AntiForgeryToken()
+
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Generate Type</label>
+                    <label class="form-label fw-bold">Generate Type</label>
                     <div class="d-flex gap-2">
-                        <button type="button" class="tab-btn @(genType!="assignment" ? "active" : "")" onclick="updateType(this, 'quiz')"><i class="bi bi-patch-question-fill"></i> Quiz</button>
-                        <button type="button" class="tab-btn @(genType=="assignment" ? "active" : "")" onclick="updateType(this, 'assignment')"><i class="bi bi-file-earmark-text-fill"></i> Assignment</button>
+                        <button type="button" class="tab-btn @(genType != "assignment" ? "active" : "")" onclick="updateType(this, 'quiz')">
+                            <i class="bi bi-patch-question-fill"></i> Quiz
+                        </button>
+                        <button type="button" class="tab-btn @(genType == "assignment" ? "active" : "")" onclick="updateType(this, 'assignment')">
+                            <i class="bi bi-file-earmark-text-fill"></i> Assignment
+                        </button>
                     </div>
                     <input type="hidden" name="type" id="typeInput" value="@genType" />
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Course</label>
+                    <label class="form-label fw-bold">Course Mapping</label>
                     <select name="courseId" class="form-select">
                         <option value="">-- General / Optional --</option>
                         @foreach (var c in courses)
                         {
-                            <option value="@c.Id">@c.Title</option>
+                        <option value="@c.Id">@c.Title</option>
                         }
                     </select>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Topic <span class="text-danger">*</span></label>
-                    <input name="topic" class="form-control" value="@topic" required />
+                    <label class="form-label fw-bold">Topic / Base Context <span class="text-danger">*</span></label>
+                    <input name="topic" class="form-control" placeholder="e.g., Introduction to Neural Networks" value="@topic" required />
                 </div>
 
-                <div class="row g-2 mb-4">
-                    <div class="col-6" id="countDiv">
-                        <label class="form-label fw-semibold">Questions</label>
+                <div class="row g-2 mb-4" id="quizParameters" style="display: @(genType == "assignment" ? "none" : "flex");">
+                    <div class="col-6">
+                        <label class="form-label fw-bold">Questions Count</label>
                         <select name="count" class="form-select">
-                            <option value="5" selected>5</option>
-                            <option value="10">10</option>
+                            <option value="5" selected>5 Items</option>
+                            <option value="10">10 Items</option>
+                            <option value="15" selected>15 Items</option>
+                            <option value="20">20 Items</option>
                         </select>
                     </div>
-                    <div class="col-6" id="formatDiv">
-                        <label class="form-label fw-semibold">Quiz Format</label>
+                    <div class="col-6">
+                        <label class="form-label fw-bold">Quiz Format</label>
                         <select name="quizFormat" class="form-select">
                             <option value="mcq">MCQ Based</option>
                             <option value="subjective">Question Based</option>
@@ -110,34 +165,60 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100" id="genBtn"><i class="bi bi-stars"></i> Generate with AI</button>
+                <button type="submit" class="btn btn-portal-primary w-100" id="genBtn">
+                    <i class="bi bi-stars"></i> Generate with AI
+                </button>
             </form>
         </div>
     </div>
 
     <div class="col-lg-7">
-        <div class="gen-card shadow-sm">
+        <div class="gen-card h-100 d-flex flex-column">
             @if (!string.IsNullOrEmpty(generated))
             {
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="badge bg-success">✅ GENERATED</span>
-                    <div class="d-flex gap-2">
-                        <form method="post" action="/Teacher/Generate">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="type" value="@genType" /><input type="hidden" name="topic" value="@topic" /><input type="hidden" name="downloadType" value="questions" />
-                            <button type="submit" class="btn btn-sm btn-primary">Download Qs</button>
-                        </form>
-                        <form method="post" action="/Teacher/Generate">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="type" value="@genType" /><input type="hidden" name="topic" value="@topic" /><input type="hidden" name="downloadType" value="solutions" />
-                            <button type="submit" class="btn btn-sm btn-warning">Download Sol</button>
-                        </form>
-                    </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded">
+                    <i class="bi bi-check-circle-fill"></i> Generation Process Succeeded
+                </span>
+                <div class="d-flex gap-2">
+                    <form method="post" action="/Teacher/Generate" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="type" value="@genType" />
+                        <input type="hidden" name="topic" value="@topic" />
+                        <input type="hidden" name="downloadType" value="questions" />
+                        <button type="submit" class="btn btn-sm btn-outline-secondary fw-bold px-3">
+                            <i class="bi bi-download"></i> Download Qs
+                        </button>
+                    </form>
+                    <form method="post" action="/Teacher/Generate" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="type" value="@genType" />
+                        <input type="hidden" name="topic" value="@topic" />
+                        <input type="hidden" name="downloadType" value="solutions" />
+                        <button type="submit" class="btn btn-sm btn-outline-secondary fw-bold px-3">
+                            <i class="bi bi-file-earmark-check"></i> Download Sol
+                        </button>
+                    </form>
                 </div>
-                <div class="result-box">
-                    <strong>QUESTIONS:</strong><br />@generated
-                    <hr /><strong>SOLUTIONS:</strong><br />@solutions
-                </div>
+            </div>
+
+            <div class="result-box flex-grow-1">
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-patch-question"></i> Questions Set</h6>
+                <div class="mb-3 text-secondary">@generated</div>
+
+                <div class="section-divider"></div>
+
+                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-lightning-charge"></i> Answer Key & Schemes</h6>
+                <div class="text-secondary">@solutions</div>
+            </div>
+            }
+            else
+            {
+            <div class="text-center my-auto py-5 text-muted">
+                <i class="bi bi-cloud-arrow-up display-4 text-secondary mb-3 d-block"></i>
+                <h6 class="fw-semibold">Pipeline Engine Idle</h6>
+                <p class="small text-wrap px-4">Provide systemic inputs on the parameter dashboard layout to render data objects inside this display block.</p>
+            </div>
             }
         </div>
     </div>
@@ -148,11 +229,14 @@
         document.getElementById('typeInput').value = t;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById('countDiv').style.display = (t === 'quiz') ? 'block' : 'none';
-        document.getElementById('formatDiv').style.display = (t === 'quiz') ? 'block' : 'none';
+
+        // Match standard display system wrapper toggle
+        document.getElementById('quizParameters').style.display = (t === 'quiz') ? 'flex' : 'none';
     }
+
     document.getElementById('aiForm').addEventListener('submit', () => {
-        document.getElementById('genBtn').disabled = true;
-        document.getElementById('genBtn').innerHTML = 'Generating...';
+        const btn = document.getElementById('genBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Parsing Neural Vector Matrices...';
     });
 </script>
