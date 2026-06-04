@@ -16,4 +16,12 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 EXPOSE 80
+<<<<<<< HEAD
 ENTRYPOINT ["dotnet", "AI_Campus_Assistant_System.dll"]
+=======
+<<<<<<< Updated upstream
+ENTRYPOINT ["dotnet", "AI_Final_Campus_Assistant.dll"]
+=======
+ENTRYPOINT ["dotnet", "AI_Campus_Assistant.dll"]
+>>>>>>> Stashed changes
+>>>>>>> f1a3adaf3b9e1d8dcbdf92dfe19c32e92791316c
