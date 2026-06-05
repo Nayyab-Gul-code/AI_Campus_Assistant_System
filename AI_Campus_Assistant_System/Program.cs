@@ -13,7 +13,7 @@ builder.Services.Configure<MongoDbSettings>(
 builder.Services.AddSingleton<MongoDbContext>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MongoDbService>();
-builder.Services.AddScoped<GeminiAiService>();
+builder.Services.AddScoped<GroqAiService>();
 builder.Services.AddScoped<SeedDataService>();
 builder.Services.AddHttpClient();
 
