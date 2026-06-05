@@ -1,0 +1,196 @@
+@{
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+
+    ViewData["Title"] = "Grade Submissions";
+
+    var assignments = ViewBag.Assignments as List<AI_Campus_Assistant.Models.Assignment> ?? new();
+
+    var submissions = ViewBag.Submissions as List<AI_Campus_Assistant.Models.AssignmentSubmission> ?? new();
+
+    var selAsn = ViewBag.SelectedAssignment as AI_Campus_Assistant.Models.Assignment;
+}
+
+<div style="display:grid;grid-template-columns:270px 1fr;gap:18px;align-items:flex-start;">
+
+    <!-- Assignment List -->
+    <div class="card">
+        <div class="card-header"><span class="card-title" style="font-size:13px;"><i class="bi bi-list-ul" style="color:#0D9069;margin-right:5px;"></i>Assignments</span></div>
+        <div style="padding:8px;">
+            @foreach (var a in assignments)
+            {
+
+                var isSel = selAsn?.Id == a.Id;
+                <a href="/Teacher/GradeSubmissions?assignmentId=@a.Id"
+                   style="display:block;padding:10px 12px;border-radius:9px;margin-bottom:3px;text-decoration:none;
+                  background:@(isSel?"#CCFBF1":"transparent");border:1.5px solid @(isSel?"#0D9069":"transparent");">
+                    <div style="font-size:13px;font-weight:@(isSel?"800":"600");color:@(isSel?"#0D9069":"#0F172A");">@a.Title</div>
+                    <div style="font-size:11px;color:#94A3B8;margin-top:2px;">@a.CourseName · Due @a.DueDate.ToString("MMM dd")</div>
+                    <div style="font-size:11px;color:#6C63FF;margin-top:2px;font-weight:700;">@a.TotalMarks marks</div>
+                </a>
+            }
+            @if (!assignments.Any())
+            {
+                <div style="padding:14px;font-size:12.5px;color:#94A3B8;text-align:center;">No assignments yet</div>
+            }
+        </div>
+    </div>
+
+    <!-- Submissions Panel -->
+    <div>
+        @if (selAsn != null)
+
+        {
+
+            var graded = submissions.Count(s => s.IsGraded);
+
+            var ungraded = submissions.Count(s => !s.IsGraded);
+
+            <div style="background:linear-gradient(135deg,#042F2E,#0D9069);border-radius:13px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                    <div style="color:rgba(255,255,255,.6);font-size:11.5px;">Grading Assignment</div>
+                    <div style="color:#fff;font-size:17px;font-weight:800;">@selAsn.Title</div>
+                    <div style="color:rgba(255,255,255,.5);font-size:12px;">@selAsn.CourseName · @selAsn.TotalMarks marks total</div>
+                </div>
+                <div style="display:flex;gap:14px;text-align:center;">
+                    <div><div style="color:rgba(255,255,255,.6);font-size:10.5px;">Total</div><div style="color:#fff;font-size:22px;font-weight:800;">@submissions.Count</div></div>
+                    <div><div style="color:rgba(255,255,255,.6);font-size:10.5px;">Graded</div><div style="color:#34D399;font-size:22px;font-weight:800;">@graded</div></div>
+                    <div><div style="color:rgba(255,255,255,.6);font-size:10.5px;">Pending</div><div style="color:#FCD34D;font-size:22px;font-weight:800;">@ungraded</div></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title"><i class="bi bi-people-fill" style="color:#0D9069;margin-right:6px;"></i>Student Submissions</span>
+                    <span class="badge badge-success">@graded graded</span>
+                </div>
+                @foreach (var s in submissions)
+
+                {
+                    <div style="padding:16px 20px;border-bottom:1px solid #F1F5F9;">
+                        <!-- Student header -->
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div style="width:36px;height:36px;border-radius:9px;background:#CCFBF1;color:#0D9069;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">
+                                    @s.StudentName[0].ToString().ToUpper()
+                                </div>
+                                <div>
+                                    <div style="font-weight:700;font-size:14px;">@s.StudentName</div>
+                                    <div style="font-size:11.5px;color:#94A3B8;">Submitted @s.SubmittedAt.ToString("dd MMM yyyy, HH:mm")</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                @if (s.IsGraded)
+
+                                {
+                                    <span class="badge badge-success"><i class="bi bi-check-circle-fill"></i> @s.ObtainedMarks / @selAsn.TotalMarks</span>
+                                }
+
+                                else
+
+                                {
+                                    <span class="badge badge-warning"><i class="bi bi-clock-fill"></i> Pending</span>
+                                }
+                                <button onclick="openModal('grade-@s.Id')" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-award-fill"></i> @(s.IsGraded ? "Update" : "Grade")
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Submission content -->
+                        @if (!string.IsNullOrEmpty(s.Content))
+
+                        {
+                            <div style="background:#F0FDFB;border:1px solid #99F6E4;border-radius:9px;padding:10px 13px;font-size:12.5px;color:#0F172A;line-height:1.6;max-height:80px;overflow:hidden;margin-bottom:8px;">
+                                @(s.Content.Length > 200 ? s.Content.Substring(0, 200) + "…" : s.Content)
+                            </div>
+                        }
+
+                        <!-- File submission -->
+                        @if (!string.IsNullOrEmpty(s.FilePath))
+
+                        {
+
+                            var fileIcon = s.FileType switch
+                            {
+
+                                "pdf" => "bi-file-earmark-pdf-fill",
+                                "docx" or "doc" => "bi-file-earmark-word-fill",
+
+                                "pptx" or "ppt" => "bi-file-earmark-slides-fill",
+                                "xlsx" or "xls" => "bi-file-earmark-excel-fill",
+
+                                _ => "bi-file-earmark-fill"
+                            };
+
+                            var fileColor = s.FileType switch
+                            {
+
+                                "pdf" => "#E11D48",
+                                "docx" or "doc" => "#1A6FD4",
+
+                                "pptx" or "ppt" => "#D97706",
+                                "xlsx" or "xls" => "#0D9069",
+                                _ => "#64748B"
+                            };
+                            <a href="/Teacher/DownloadSubmission/@s.Id"
+                               style="display:inline-flex;align-items:center;gap:7px;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:8px;padding:7px 12px;text-decoration:none;color:#0F172A;font-size:12.5px;font-weight:600;margin-bottom:8px;">
+                                <i class="bi @fileIcon" style="color:@fileColor;font-size:16px;"></i>
+                                @s.FileName
+                                <span class="badge badge-info" style="font-size:10px;margin-left:4px;"><i class="bi bi-download"></i> Download</span>
+                            </a>
+                        }
+
+                        @if (s.IsGraded && !string.IsNullOrEmpty(s.Feedback))
+
+                        {
+                            <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:8px 12px;font-size:12px;color:#92400E;">
+                                <strong>Feedback:</strong> @s.Feedback
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Grade Modal -->
+                    <div class="modal-backdrop" id="grade-@s.Id">
+                        <div class="modal" style="max-width:440px;">
+                            <div class="modal-title"><i class="bi bi-award-fill" style="color:#0D9069;margin-right:8px;"></i>Grade Submission</div>
+                            <div style="background:#F0FDFB;border:1px solid #99F6E4;border-radius:9px;padding:10px 13px;margin-bottom:14px;">
+                                <div style="font-weight:700;font-size:14px;">@s.StudentName</div>
+                                <div style="font-size:12px;color:#64748B;margin-top:2px;">Max marks: @selAsn.TotalMarks</div>
+                            </div>
+                            <form method="post" action="/Teacher/GradeSubmission">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="submissionId" value="@s.Id" />
+                                <input type="hidden" name="assignmentId" value="@selAsn.Id" />
+                                <div class="form-group">
+                                    <label class="form-label">Marks Obtained (0 – @selAsn.TotalMarks) *</label>
+                                    <input type="number" name="marks" class="form-control" min="0"
+                                           max="@selAsn.TotalMarks" step="0.5" value="@(s.ObtainedMarks ?? 0)" required />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Feedback for Student</label>
+                                    <textarea name="feedback" class="form-control" rows="3" style="resize:vertical;"
+                                              placeholder="Write feedback...">@s.Feedback</textarea>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" onclick="closeModal('grade-@s.Id')" class="btn btn-secondary">Cancel</button>
+                                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save Grade</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                }
+                @if (!submissions.Any())
+
+                {
+                    <div class="empty-state"><i class="bi bi-inbox"></i><h4>No Submissions</h4><p>No students have submitted yet.</p></div>
+                }
+            </div>
+        }
+
+        else
+
+        {
+            <div class="card"><div class="empty-state"><i class="bi bi-arrow-left-circle-fill" style="color:#0D9069;"></i><h4>Select an Assignment</h4><p>Click any assignment to view submissions.</p></div></div>
+        }
+    </div>
+</div>

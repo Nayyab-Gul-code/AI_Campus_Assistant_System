@@ -1,0 +1,141 @@
+@{
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+    ViewData["Title"] = "AI Suggestions";
+    var courses = ViewBag.Courses as List<AI_Campus_Assistant.Models.Course> ?? new();
+}
+
+<!-- Smart suggestions based on local data — no API key needed -->
+<div style="background:linear-gradient(135deg,#042F2E,#0D9069);border-radius:16px;padding:22px 28px;margin-bottom:22px;position:relative;overflow:hidden;">
+  <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.05);top:-60px;right:-30px;"></div>
+  <div style="position:relative;z-index:1;">
+    <div style="color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-bottom:4px;">Powered by Smart Analytics</div>
+    <div style="color:#fff;font-size:20px;font-weight:800;margin-bottom:4px;">AI Teaching Suggestions</div>
+    <div style="color:rgba(255,255,255,.55);font-size:13px;">Smart recommendations based on your class data</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+
+  <!-- Teaching Tips -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="bi bi-lightbulb-fill" style="color:#D97706;margin-right:6px;"></i>Teaching Best Practices</span>
+    </div>
+    <div style="padding:0;">
+      @foreach (var (icon, title, tip, color) in new[]{
+        ("bi-diagram-3-fill","Active Learning","Use group discussions, pair work, and problem-solving instead of only lectures. Students retain 70% more with active methods.","#1A6FD4"),
+        ("bi-bar-chart-fill","Regular Assessments","Weekly short quizzes (10 min) help identify weak students early. Don't wait for mid-term to discover problems.","#0D9069"),
+        ("bi-chat-dots-fill","Feedback Culture","Give written feedback on assignments within 5 days. Delayed feedback loses its impact on learning.","#6C63FF"),
+        ("bi-people-fill","Peer Learning","Pair strong students with weaker ones for 20% of class time. Both students benefit from this arrangement.","#D97706"),
+        ("bi-camera-video-fill","Visual Teaching","Use diagrams, flowcharts and real-world examples. Abstract concepts become 3x easier with visual representation.","#0D9069"),
+        ("bi-calendar-check-fill","Attendance Impact","Students with >85% attendance score 20+ marks higher on average. Address absences in week 3, not week 10.","#E11D48"),
+      })
+      {
+        <div style="padding:13px 18px;border-bottom:1px solid #F0FDFB;display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:38px;height:38px;border-radius:10px;background:#F0FDFB;border:1.5px solid #CCFBF1;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi @icon" style="color:@color;font-size:17px;"></i>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:13.5px;color:#0F172A;margin-bottom:3px;">@title</div>
+            <div style="font-size:12.5px;color:#64748B;line-height:1.6;">@tip</div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Course Analysis -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="bi bi-clipboard-data-fill" style="color:#1A6FD4;margin-right:6px;"></i>Your Courses Overview</span>
+      </div>
+      <div style="padding:0;">
+        @if (courses.Any())
+        {
+          foreach (var c in courses)
+          {
+            <div style="padding:12px 18px;border-bottom:1px solid #F0FDFB;display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-weight:700;font-size:13.5px;color:#0F172A;">@c.Title</div>
+                <div style="font-size:11.5px;color:#94A3B8;">@c.Program · Sem @c.SemesterNo · @c.Credits cr</div>
+              </div>
+              <div style="text-align:right;">
+                <a href="/Teacher/Students?courseId=@c.Id" class="btn btn-secondary btn-sm">View Students</a>
+              </div>
+            </div>
+          }
+        }
+        else
+        {
+          <div style="padding:20px;text-align:center;color:#94A3B8;font-size:13px;">No courses assigned</div>
+        }
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="bi bi-question-circle-fill" style="color:#6C63FF;margin-right:6px;"></i>Common Student Issues</span>
+      </div>
+      <div style="padding:0;">
+        @foreach (var (issue, solution, urgency) in new[]{
+          ("Low Attendance","Send reminder notification and contact students personally. Document reasons.","High"),
+          ("Failing Mid-Term","Offer extra help sessions before finals. Identify specific weak topics.","High"),
+          ("Not Submitting Assignments","Set clear deadlines with grade penalties. Partial marks for late submissions.","Medium"),
+          ("Confused in Class","Use Socratic questioning: ask 'why' not just 'what'. Encourage questions.","Low"),
+        })
+        {
+          var urgColor = urgency=="High" ? "#E11D48" : urgency=="Medium" ? "#D97706" : "#0D9069";
+          <div style="padding:11px 18px;border-bottom:1px solid #F0FDFB;display:flex;align-items:flex-start;gap:10px;">
+            <span style="background:@urgColor;color:#fff;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0;margin-top:2px;">@urgency</span>
+            <div>
+              <div style="font-weight:700;font-size:13px;color:#0F172A;">@issue</div>
+              <div style="font-size:12px;color:#64748B;margin-top:2px;">@solution</div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="bi bi-journal-bookmark-fill" style="color:#0D9069;margin-right:6px;"></i>Quiz Idea Generator</span>
+      </div>
+      <div class="card-body">
+        <div style="margin-bottom:12px;">
+          <select id="quizCourse" class="form-control" onchange="generateQuiz()">
+            <option value="">Select a course to generate quiz ideas</option>
+            @foreach (var c in courses)
+            { <option value="@c.Title">@c.Title (@c.Code)</option> }
+          </select>
+        </div>
+        <div id="quizIdeas" style="display:none;background:#F0FDFB;border:1.5px solid #99F6E4;border-radius:10px;padding:13px;">
+          <div style="font-size:12px;font-weight:700;color:#0D9069;text-transform:uppercase;margin-bottom:8px;">Suggested Quiz Types</div>
+          <div id="quizContent" style="font-size:13px;color:#0F172A;line-height:1.8;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const quizTemplates = {
+  default: [
+    "✎ MCQ Quiz (15 questions, 20 min) — conceptual understanding",
+    "✎ Fill-in-the-blank (10 questions) — terminology recall",
+    "✎ Short answer (5 questions, 2 marks each) — applied knowledge",
+    "✎ Code/Diagram-based question — practical application",
+    "✎ Case study analysis (open book, 30 min) — critical thinking",
+  ]
+};
+
+function generateQuiz() {
+  const course = document.getElementById('quizCourse').value;
+  const div    = document.getElementById('quizIdeas');
+  const cont   = document.getElementById('quizContent');
+  if (!course) { div.style.display='none'; return; }
+  const tips   = quizTemplates.default;
+  cont.innerHTML = tips.map(t => `<div style="padding:3px 0;border-bottom:1px solid #CCFBF1;">${t}</div>`).join('');
+  div.style.display = '';
+}
+</script>

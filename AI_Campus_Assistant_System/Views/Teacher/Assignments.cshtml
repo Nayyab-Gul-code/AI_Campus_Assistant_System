@@ -1,0 +1,144 @@
+@model List<AI_Campus_Assistant.Models.Assignment>
+@{
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+
+    ViewData["Title"] = "Assignments";
+
+    var courses = ViewBag.Courses as List<AI_Campus_Assistant.Models.Course> ?? new();
+}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+    <div>
+        <h5 style="font-weight:800;margin:0;">Assignments</h5>
+        <p style="font-size:12px;color:#64748B;margin:2px 0 0;">Create assignments with optional file attachment. Students submit files/text.</p>
+    </div>
+    <button onclick="openModal('createAsnModal')" class="btn btn-primary">
+        <i class="bi bi-plus-circle-fill"></i> Create Assignment
+    </button>
+</div>
+
+<div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+    <div class="stat-card"><div class="sc-icon sci-amber"><i class="bi bi-pencil-square"></i></div><div><div class="sc-val" data-count="@Model.Count">0</div><div class="sc-lbl">Total Assignments</div></div></div>
+    <div class="stat-card"><div class="sc-icon sci-green"><i class="bi bi-calendar-check-fill"></i></div><div><div class="sc-val" data-count="@Model.Count(a => a.DueDate >= DateTime.Today)">0</div><div class="sc-lbl">Active</div></div></div>
+    <div class="stat-card"><div class="sc-icon sci-red"><i class="bi bi-calendar-x-fill"></i></div><div><div class="sc-val" data-count="@Model.Count(a => a.DueDate < DateTime.Today)">0</div><div class="sc-lbl">Closed</div></div></div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-title"><i class="bi bi-pencil-square" style="color:#0D9069;margin-right:6px;"></i>All Assignments (@Model.Count)</span>
+    </div>
+    <div style="display:flex;flex-direction:column;">
+        @foreach (var a in Model.OrderByDescending(a => a.CreatedAt))
+
+        {
+
+            var daysLeft = (a.DueDate - DateTime.Today).Days;
+
+            var isOver = daysLeft < 0;
+
+            var urgColor = isOver ? "#E11D48" : daysLeft <= 2 ? "#D97706" : "#0D9069";
+            <div style="padding:16px 20px;border-bottom:1px solid #F1F5F9;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;">
+                <div style="flex:1;">
+                    <div style="font-size:15px;font-weight:800;color:#0F172A;margin-bottom:4px;">@a.Title</div>
+                    @if (!string.IsNullOrEmpty(a.Description))
+                    {
+                        <div style="font-size:12.5px;color:#64748B;margin-bottom:8px;line-height:1.5;">@a.Description</div>
+                    }
+                    <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;">
+                        <span class="badge badge-success"><i class="bi bi-book-fill"></i> @a.CourseName</span>
+                        <span class="badge badge-info">@a.Program · Sem @a.SemesterNo</span>
+                        <span class="badge badge-purple"><i class="bi bi-award-fill"></i> @a.TotalMarks Marks</span>
+                        @if (!string.IsNullOrEmpty(a.FilePath))
+
+                        {
+                            <a href="/Teacher/DownloadAssignment/@a.Id" class="badge badge-warning" style="text-decoration:none;">
+                                <i class="bi bi-paperclip"></i> Question File
+                            </a>
+                        }
+                    </div>
+                </div>
+                <div style="text-align:right;flex-shrink:0;">
+                    <div style="font-size:12px;color:@urgColor;font-weight:700;margin-bottom:8px;">
+                        <i class="bi bi-calendar3"></i>
+                        @(isOver ? "Closed" : daysLeft == 0 ? "Due Today!" : $"{daysLeft} days left")
+                        <br /><span style="font-weight:500;color:#94A3B8;">@a.DueDate.ToString("dd MMM yyyy")</span>
+                    </div>
+                    <div style="display:flex;gap:6px;justify-content:flex-end;">
+                        <a href="/Teacher/GradeSubmissions?assignmentId=@a.Id" class="btn btn-primary btn-sm">
+                            <i class="bi bi-award-fill"></i> Grade
+                        </a>
+                        <form method="post" action="/Teacher/DeleteAssignment/@a.Id" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="button" class="btn btn-danger btn-sm"
+                                    onclick="if(confirm('Delete @a.Title?'))this.closest('form').submit()">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+        @if (!Model.Any())
+
+        {
+            <div class="empty-state"><i class="bi bi-pencil"></i><h4>No Assignments</h4><p>Create your first assignment.</p></div>
+        }
+    </div>
+</div>
+
+<!-- Create Assignment Modal -->
+<div class="modal-backdrop" id="createAsnModal">
+    <div class="modal" style="max-width:560px;">
+        <div class="modal-title"><i class="bi bi-plus-circle-fill" style="color:#0D9069;margin-right:8px;"></i>Create Assignment</div>
+        <form method="post" action="/Teacher/CreateAssignment" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div class="form-group">
+                <label class="form-label">Title *</label>
+                <input type="text" name="Title" class="form-control" placeholder="Assignment title" required />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description / Instructions</label>
+                <textarea name="Description" class="form-control" rows="3" style="resize:vertical;"
+                          placeholder="Describe the assignment requirements..."></textarea>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Course *</label>
+                    <select name="CourseId" class="form-control" required>
+                        <option value="">— Select Course —</option>
+                        @foreach (var c in courses)
+
+                        {
+                            <option value="@c.Id">@c.Title (@c.Code) — @c.Program Sem @c.SemesterNo</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Total Marks *</label>
+                    <input type="number" name="TotalMarks" class="form-control" value="20" min="1" max="100" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Due Date *</label>
+                <input type="date" name="DueDate" class="form-control"
+                       min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+            </div>
+            <!-- File Attachment -->
+            <div class="form-group">
+                <label class="form-label">Attach Question File <span style="font-weight:400;color:#94A3B8;">(optional — PDF, DOCX, PPTX, XLSX)</span></label>
+                <div style="border:2px dashed #99F6E4;border-radius:9px;padding:16px;text-align:center;cursor:pointer;background:#F0FDFB;"
+                     onclick="document.getElementById('asnFile').click()">
+                    <i class="bi bi-paperclip" style="font-size:22px;color:#0D9069;display:block;margin-bottom:4px;"></i>
+                    <div id="asnFileName" style="font-size:12.5px;color:#94A3B8;">Click to attach question paper</div>
+                </div>
+                <input type="file" id="asnFile" name="assignmentFile"
+                       accept=".pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls" style="display:none;"
+                       onchange="document.getElementById('asnFileName').textContent=this.files[0]?.name||'No file selected'" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('createAsnModal')" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle-fill"></i> Create</button>
+            </div>
+        </form>
+    </div>
+</div>

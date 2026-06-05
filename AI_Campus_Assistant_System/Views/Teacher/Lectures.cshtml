@@ -1,0 +1,139 @@
+@model List<AI_Campus_Assistant.Models.Lecture>
+@{
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+    ViewData["Title"] = "Lecture Upload";
+    var courses = ViewBag.Courses as List<AI_Campus_Assistant.Models.Course> ?? new();
+}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+  <div>
+    <h5 style="font-weight:800;margin:0;">Lecture Materials</h5>
+    <p style="color:#64748B;font-size:12px;margin:2px 0 0;">Upload PDF, Word, PowerPoint, Excel — Students can download.</p>
+  </div>
+  <button onclick="openModal('uploadModal')" class="btn btn-primary">
+    <i class="bi bi-cloud-upload-fill"></i> Upload Lecture
+  </button>
+</div>
+
+<div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+  <div class="stat-card"><div class="sc-icon sci-teal"><i class="bi bi-file-earmark-fill"></i></div><div><div class="sc-val" data-count="@Model.Count">0</div><div class="sc-lbl">Total Lectures</div></div></div>
+  <div class="stat-card"><div class="sc-icon sci-blue"><i class="bi bi-file-earmark-pdf-fill"></i></div><div><div class="sc-val" data-count="@Model.Count(l=>l.FileType=="pdf")">0</div><div class="sc-lbl">PDF Files</div></div></div>
+  <div class="stat-card"><div class="sc-icon sci-amber"><i class="bi bi-file-earmark-slides-fill"></i></div><div><div class="sc-val" data-count="@Model.Count(l=>l.FileType is "pptx" or "ppt")">0</div><div class="sc-lbl">Presentations</div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-files" style="color:#0D9069;margin-right:6px;"></i>All Lectures (@Model.Count)</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Title</th><th>Course</th><th>Week</th><th>File</th><th>Size</th><th>Uploaded</th><th>Action</th></tr></thead>
+      <tbody>
+        @foreach(var l in Model)
+        {
+          var fileIcon = l.FileType switch {
+            "pdf"  => "bi-file-earmark-pdf-fill",
+            "docx" or "doc" => "bi-file-earmark-word-fill",
+            "pptx" or "ppt" => "bi-file-earmark-slides-fill",
+            "xlsx" or "xls" => "bi-file-earmark-excel-fill",
+            _ => "bi-file-earmark-fill"
+          };
+          var fileColor = l.FileType switch {
+            "pdf" => "#E11D48","docx" or "doc" => "#1A6FD4",
+            "pptx" or "ppt" => "#D97706","xlsx" or "xls" => "#0D9069",_ => "#64748B"
+          };
+          var sizeKb = l.FileSize / 1024.0;
+          var sizeStr = sizeKb < 1024 ? $"{sizeKb:F0} KB" : $"{sizeKb/1024:F1} MB";
+          <tr>
+            <td>
+              <div style="font-weight:700;font-size:13px;">@l.Title</div>
+              @if(!string.IsNullOrEmpty(l.Description))
+              {<div style="font-size:11px;color:#94A3B8;">@(l.Description.Length>60?l.Description.Substring(0,60)+"…":l.Description)</div>}
+            </td>
+            <td><span class="badge badge-success">@l.CourseName</span></td>
+            <td><span class="badge badge-info">Week @l.WeekNo</span></td>
+            <td>
+              <span style="display:flex;align-items:center;gap:5px;">
+                <i class="bi @fileIcon" style="color:@fileColor;font-size:16px;"></i>
+                <span style="font-size:12px;color:#64748B;">@l.FileName</span>
+              </span>
+            </td>
+            <td style="font-size:12px;color:#94A3B8;">@sizeStr</td>
+            <td style="font-size:12px;color:#94A3B8;">@l.CreatedAt.ToString("dd MMM yyyy")</td>
+            <td>
+              <div style="display:flex;gap:5px;">
+                <a href="@l.FilePath" target="_blank" class="btn btn-secondary btn-sm" title="View/Download">
+                  <i class="bi bi-download"></i>
+                </a>
+                <form method="post" action="/Teacher/DeleteLecture/@l.Id" style="display:inline;">
+                  @Html.AntiForgeryToken()
+                  <button type="button" class="btn btn-danger btn-sm"
+                          onclick="if(confirm('Delete this lecture?'))this.closest('form').submit()">
+                    <i class="bi bi-trash-fill"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if(!Model.Any())
+    {<div class="empty-state"><i class="bi bi-cloud-upload"></i><h4>No Lectures Uploaded</h4><p>Click "Upload Lecture" to add your first material.</p></div>}
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal-backdrop" id="uploadModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-title"><i class="bi bi-cloud-upload-fill" style="color:#0D9069;margin-right:8px;"></i>Upload Lecture</div>
+    <form method="post" action="/Teacher/UploadLecture" enctype="multipart/form-data">
+      @Html.AntiForgeryToken()
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input type="text" name="title" class="form-control" placeholder="e.g. Lecture 1: Introduction" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea name="description" class="form-control" rows="2" style="resize:vertical;" placeholder="Brief description of the lecture..."></textarea>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Course *</label>
+          <select name="courseId" class="form-control" required>
+            <option value="">— Select Course —</option>
+            @foreach(var c in courses)
+            {<option value="@c.Id">@c.Title (@c.Code)</option>}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Week Number</label>
+          <input type="number" name="weekNo" class="form-control" value="1" min="1" max="18"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Select File * <span style="color:#94A3B8;font-weight:400;">(PDF, DOCX, PPTX, XLSX)</span></label>
+        <div id="dropZone" style="border:2px dashed #99F6E4;border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:#F0FDFB;transition:.2s;" onclick="document.getElementById('lecFile').click()">
+          <i class="bi bi-cloud-upload" style="font-size:28px;color:#0D9069;display:block;margin-bottom:6px;"></i>
+          <div style="font-size:13px;font-weight:700;color:#0D9069;">Click to select file</div>
+          <div id="fileName" style="font-size:11.5px;color:#94A3B8;margin-top:4px;">PDF, DOCX, PPTX, XLSX supported</div>
+        </div>
+        <input type="file" id="lecFile" name="lectureFile" accept=".pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls"
+               style="display:none;" onchange="showFileName(this)" required/>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="closeModal('uploadModal')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-cloud-upload-fill"></i> Upload</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function showFileName(input){
+  var name = input.files[0]?.name || '';
+  document.getElementById('fileName').textContent = name || 'No file selected';
+  document.getElementById('dropZone').style.borderColor = name ? '#0D9069' : '#99F6E4';
+  document.getElementById('dropZone').style.background = name ? '#CCFBF1' : '#F0FDFB';
+}
+</script>

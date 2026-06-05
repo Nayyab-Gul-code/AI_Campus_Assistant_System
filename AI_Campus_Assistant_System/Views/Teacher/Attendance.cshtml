@@ -1,0 +1,212 @@
+@{
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+
+    ViewData["Title"] = "Mark Attendance";
+
+    var courses = ViewBag.Courses as List<AI_Campus_Assistant.Models.Course> ?? new();
+}
+
+<div class="card" style="max-width:780px;">
+    <div class="card-header">
+        <span class="card-title"><i class="bi bi-calendar-check-fill" style="color:#0D9069;margin-right:6px;"></i>Mark Attendance</span>
+        <a href="/Teacher/AttendanceReport" class="btn btn-secondary btn-sm">
+            <i class="bi bi-download"></i> View Reports
+        </a>
+    </div>
+    <div class="card-body">
+        <form method="post" action="/Teacher/MarkAttendance" id="attForm">
+            @Html.AntiForgeryToken()
+
+            <div class="form-grid" style="margin-bottom:16px;">
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label">Select Course *</label>
+                    <select name="courseId" class="form-control" id="courseSelect"
+                            onchange="fillCourseName(this);loadStudents(this.value);" required>
+                        <option value="">— Select Course —</option>
+                        @foreach (var c in courses)
+
+                        {
+                        <option value="@c.Id" data-name="@c.Title" data-prog="@c.Program" data-sem="@c.SemesterNo">
+                            @c.Title (@c.Code) — @c.Program Sem @c.SemesterNo
+                        </option>
+                        }
+                    </select>
+                    <input type="hidden" name="courseName" id="courseNameHidden" />
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label class="form-label">Date *</label>
+                    <input type="date" name="date" class="form-control"
+                           value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                </div>
+            </div>
+
+            <div id="loadingDiv" style="display:none;text-align:center;padding:20px;color:#0D9069;">
+                <div style="width:28px;height:28px;border:3px solid #CCFBF1;border-top-color:#0D9069;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;"></div>
+                <div style="margin-top:8px;font-size:13px;">Loading students...</div>
+            </div>
+
+            <div id="studentListSection" style="display:none;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div id="courseInfoBadge" style="font-size:12.5px;font-weight:700;color:#0D9069;"></div>
+                    <div style="display:flex;gap:6px;">
+                        <button type="button" onclick="markAll('present')" class="btn btn-secondary btn-sm">
+                            <i class="bi bi-check-all"></i> All Present
+                        </button>
+                        <button type="button" onclick="markAll('absent')" class="btn btn-secondary btn-sm">
+                            <i class="bi bi-x-circle"></i> All Absent
+                        </button>
+                    </div>
+                </div>
+                <div id="studentsContainer"></div>
+                <div style="margin-top:16px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save-fill"></i> Save Attendance
+                    </button>
+                </div>
+            </div>
+
+            <div id="noStudents" style="text-align:center;padding:30px;color:#94A3B8;">
+                <i class="bi bi-mortarboard" style="font-size:36px;display:block;margin-bottom:10px;opacity:.4;"></i>
+                <div style="font-size:13.5px;font-weight:600;">Select a course to load students</div>
+                <div style="font-size:12px;margin-top:4px;">Students are filtered by Program + Semester</div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .att-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        background: #F8FAFC;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 10px;
+        margin-bottom: 7px;
+    }
+
+    .att-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 11px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1.5px solid #E2E8F0;
+        transition: .15s;
+        color: #64748B;
+        background: #F8FAFC;
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg)
+        }
+    }
+</style>
+
+<script>
+    function fillCourseName(sel) {
+        var opt = sel.options[sel.selectedIndex];
+        document.getElementById('courseNameHidden').value = opt.dataset.name || '';
+    }
+
+    async function loadStudents(courseId) {
+        if (!courseId) {
+            document.getElementById('studentListSection').style.display = 'none';
+            document.getElementById('noStudents').style.display = 'block';
+            return;
+        }
+        document.getElementById('loadingDiv').style.display = 'block';
+        document.getElementById('studentListSection').style.display = 'none';
+        document.getElementById('noStudents').style.display = 'none';
+
+        try {
+            var resp = await fetch('/Teacher/GetStudentsByCourse?courseId=' + courseId);
+            var students = await resp.json();
+            document.getElementById('loadingDiv').style.display = 'none';
+
+            if (!students.length) {
+                document.getElementById('noStudents').style.display = 'block';
+                document.getElementById('noStudents').innerHTML =
+                    '<i class="bi bi-person-x" style="font-size:36px;display:block;margin-bottom:10px;opacity:.4;"></i>' +
+                    '<div style="font-size:13.5px;font-weight:600;color:#64748B;">No students enrolled in this program/semester</div>';
+                return;
+            }
+
+            var opt = document.getElementById('courseSelect').options[document.getElementById('courseSelect').selectedIndex];
+            document.getElementById('courseInfoBadge').innerHTML =
+                '<i class="bi bi-people-fill"></i> ' + students.length + ' students — ' + opt.dataset.prog + ' Semester ' + opt.dataset.sem;
+
+            var cont = document.getElementById('studentsContainer');
+            cont.innerHTML = '';
+            students.forEach(function (s, i) {
+                // ✅ FIX: statuses[] array name use karo, aur hidden inputs row ke saath rakho
+                cont.innerHTML +=
+                    '<div class="att-row" id="row-' + i + '">' +
+                    '  <div style="display:flex;align-items:center;gap:10px;">' +
+                    '    <div style="width:34px;height:34px;border-radius:9px;background:#CCFBF1;color:#0D9069;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px;">' + s.name[0].toUpperCase() + '</div>' +
+                    '    <span style="font-weight:600;font-size:13.5px;">' + s.name + '</span>' +
+                    '    <input type="hidden" name="studentIds" value="' + s.id + '"/>' +
+                    '    <input type="hidden" name="studentNames" value="' + s.name + '"/>' +
+                    '  </div>' +
+                    '  <div style="display:flex;gap:6px;">' +
+                    // ✅ KEY FIX: name="statuses" same rakho lekin har student ka alag radio group
+                    // Yeh kaam nahi karta agar sab ka name same ho — isliye select element use karo
+                    '    <label class="att-label" id="lp-' + i + '" style="--lc:#0D9069;--lb:#CCFBF1;border-color:#0D9069;color:#0D9069;background:#CCFBF1;" onclick="setStatus(' + i + ',\'present\')">' +
+                    '      <i class="bi bi-check-circle-fill"></i> Present</label>' +
+                    '    <label class="att-label" id="la-' + i + '" onclick="setStatus(' + i + ',\'absent\')">' +
+                    '      <i class="bi bi-x-circle-fill"></i> Absent</label>' +
+                    '    <label class="att-label" id="ll-' + i + '" style="--lc:#D97706;--lb:#FFFBEB;" onclick="setStatus(' + i + ',\'late\')">' +
+                    '      <i class="bi bi-clock-fill"></i> Late</label>' +
+                    // ✅ Hidden select for form submission — yahi controller ko milega
+                    '    <select name="statuses" id="status-' + i + '" style="display:none;">' +
+                    '      <option value="present" selected>present</option>' +
+                    '      <option value="absent">absent</option>' +
+                    '      <option value="late">late</option>' +
+                    '    </select>' +
+                    '  </div>' +
+                    '</div>';
+            });
+            document.getElementById('studentListSection').style.display = 'block';
+        } catch (e) {
+            document.getElementById('loadingDiv').style.display = 'none';
+            document.getElementById('noStudents').style.display = 'block';
+        }
+    }
+
+    // ✅ Status set karo — hidden select update karo + UI highlight
+    function setStatus(i, status) {
+        document.getElementById('status-' + i).value = status;
+        hl(i, status);
+    }
+
+    function hl(i, status) {
+        var map = {
+            present: { lc: '#0D9069', lb: '#CCFBF1', id: 'lp' },
+            absent: { lc: '#E11D48', lb: '#FFF1F2', id: 'la' },
+            late: { lc: '#D97706', lb: '#FFFBEB', id: 'll' }
+        };
+        ['present', 'absent', 'late'].forEach(function (s) {
+            var lbl = document.getElementById(map[s].id + '-' + i);
+            if (!lbl) return;
+            if (s === status) {
+                lbl.style.borderColor = map[s].lc;
+                lbl.style.color = map[s].lc;
+                lbl.style.background = map[s].lb;
+            } else {
+                lbl.style.borderColor = '#E2E8F0';
+                lbl.style.color = '#64748B';
+                lbl.style.background = '#F8FAFC';
+            }
+        });
+    }
+
+    function markAll(status) {
+        var rows = document.querySelectorAll('[id^="row-"]');
+        rows.forEach(function (row, i) { setStatus(i, status); });
+    }
+</script>

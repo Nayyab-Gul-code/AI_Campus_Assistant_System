@@ -1,0 +1,50 @@
+@model List<AI_Campus_Assistant.Models.Course>
+@{
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+    ViewData["Title"] = "My Courses";
+}
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-book-fill" style="color:#0D9069;margin-right:6px;"></i>Assigned Courses (@Model.Count)</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:18px;">
+    @foreach (var c in Model)
+    {
+      <div style="background:#F0FDFB;border:1.5px solid #99F6E4;border-radius:13px;padding:18px;transition:.2s;"
+           onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(13,144,105,.1)'"
+           onmouseout="this.style.transform='';this.style.boxShadow=''">
+        <div style="display:flex;align-items:center;gap:11px;margin-bottom:12px;">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#0D9069,#34D399);color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;">
+            @c.Code.Substring(0,Math.Min(3,c.Code.Length))
+          </div>
+          <div>
+            <div style="font-size:14.5px;font-weight:800;color:#0F172A;">@c.Title</div>
+            <div style="font-size:11.5px;color:#0D9069;font-weight:600;">@c.Code</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;">
+          <span class="badge badge-success">@c.Program</span>
+          <span class="badge badge-info">Sem @c.SemesterNo</span>
+          <span class="badge badge-purple">@c.Credits Credits</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <a href="/Teacher/Attendance?courseId=@c.Id" class="btn btn-primary btn-sm" style="flex:1;">
+            <i class="bi bi-calendar-check-fill"></i> Attendance
+          </a>
+          <a href="/Teacher/Assignments?courseId=@c.Id" class="btn btn-secondary btn-sm" style="flex:1;">
+            <i class="bi bi-pencil-square"></i> Assignments
+          </a>
+        </div>
+      </div>
+    }
+    @if (!Model.Any())
+    {
+      <div class="empty-state" style="grid-column:1/-1;">
+        <i class="bi bi-book"></i><h4>No Courses Assigned</h4>
+        <p>Contact admin to assign courses to your account.</p>
+      </div>
+    }
+  </div>
+</div>
+<script src="/js/site.js"></script>

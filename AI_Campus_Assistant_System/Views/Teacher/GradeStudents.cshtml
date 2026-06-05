@@ -1,0 +1,223 @@
+@{
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+
+    ViewData["Title"] = "Grade Students";
+
+    var courses = ViewBag.Courses as List<AI_Campus_Assistant.Models.Course> ?? new();
+
+    var students = ViewBag.Students as List<AI_Campus_Assistant.Models.User> ?? new();
+
+    var grades = ViewBag.Grades as List<AI_Campus_Assistant.Models.Grade> ?? new();
+
+    var selCourse = ViewBag.SelCourse as AI_Campus_Assistant.Models.Course;
+}
+
+<div style="display:grid;grid-template-columns:260px 1fr;gap:18px;align-items:flex-start;">
+
+    <!-- Course list -->
+    <div class="card">
+        <div class="card-header"><span class="card-title" style="font-size:13px;"><i class="bi bi-book-fill" style="color:#0D9069;margin-right:5px;"></i>My Courses</span></div>
+        <div style="padding:8px;">
+            @foreach (var c in courses)
+            {
+
+                var isSel = selCourse?.Id == c.Id;
+                <a href="/Teacher/GradeStudents?courseId=@c.Id"
+                   style="display:block;padding:10px 12px;border-radius:9px;margin-bottom:3px;text-decoration:none;
+                  background:@(isSel?"#CCFBF1":"transparent");border:1.5px solid @(isSel?"#0D9069":"transparent");">
+                    <div style="font-size:13px;font-weight:@(isSel?"800":"600");color:@(isSel?"#0D9069":"#0F172A");">@c.Title</div>
+                    <div style="font-size:11px;color:#94A3B8;">@c.Program · Sem @c.SemesterNo</div>
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Grading Panel -->
+    <div>
+        @if (selCourse != null)
+
+        {
+            <div style="background:linear-gradient(135deg,#042F2E,#0D9069);border-radius:13px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                    <div style="color:rgba(255,255,255,.6);font-size:11.5px;">Grading Course</div>
+                    <div style="color:#fff;font-size:17px;font-weight:800;">@selCourse.Title</div>
+                    <div style="color:rgba(255,255,255,.5);font-size:12px;">@selCourse.Program · Semester @selCourse.SemesterNo · @students.Count students</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;text-align:center;">
+                    @foreach (var (label, val, color) in new[] { ("Mid", 30, "#60A5FA"), ("Final", 50, "#34D399"), ("Assign", 20, "#FCD34D"), ("Total", 100, "#fff") })
+                    {
+                        <div style="background:rgba(255,255,255,.12);border-radius:8px;padding:6px 10px;">
+                            <div style="color:rgba(255,255,255,.6);font-size:10px;">@label</div>
+                            <div style="color:@color;font-size:18px;font-weight:800;">@val</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Grade Scale Quick Reference -->
+            <div style="background:#F0FDFB;border:1px solid #99F6E4;border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <span style="font-size:12px;font-weight:700;color:#0D9069;margin-right:4px;"><i class="bi bi-info-circle-fill"></i> Grade Scale:</span>
+                @foreach (var (g, r, c) in new[] { ("A+", "90-100", "#0D9069"), ("A", "85-89", "#0D9069"), ("A-", "80-84", "#1A6FD4"), ("B+", "75-79", "#1A6FD4"), ("B", "70-74", "#1A6FD4"), ("B-", "65-69", "#D97706"), ("C+", "60-64", "#D97706"), ("C", "55-59", "#D97706"), ("F", "<40", "#E11D48") })
+
+                {
+                    <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#F8FAFC;border:1px solid #E2E8F0;color:@c;font-weight:700;">@g <span style="color:#94A3B8;font-weight:400;">@r%</span></span>
+                }
+            </div>
+
+            @if (!students.Any())
+
+            {
+                <div class="card"><div class="empty-state"><i class="bi bi-person-x"></i><h4>No Students</h4><p>No students in @selCourse.Program Sem @selCourse.SemesterNo</p></div></div>
+            }
+
+            else
+
+            {
+                @foreach (var s in students)
+
+                {
+
+                    var existing = grades.FirstOrDefault(g => g.StudentId == s.Id);
+
+                    var gradeColor = existing?.GradeLetter.StartsWith("A") == true ? "#0D9069"
+
+                    : existing?.GradeLetter.StartsWith("B") == true ? "#1A6FD4"
+
+                    : existing?.GradeLetter.StartsWith("C") == true ? "#D97706" : "#E11D48";
+
+                    var pct = existing != null ? existing.TotalMarks / 100.0 * 100 : 0;
+
+                    <div class="card" style="margin-bottom:12px;">
+                        <div style="padding:14px 18px;">
+                            <!-- Student row -->
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+                                <div style="display:flex;align-items:center;gap:12px;">
+                                    <div style="width:40px;height:40px;border-radius:10px;background:#CCFBF1;color:#0D9069;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">@s.Name[0].ToString().ToUpper()</div>
+                                    <div>
+                                        <div style="font-weight:700;font-size:14px;">@s.Name</div>
+                                        <div style="font-size:11.5px;color:#94A3B8;">@s.Email</div>
+                                    </div>
+                                    @if (existing != null)
+                                    {
+                                        <div style="background:#F0FDFB;border:1.5px solid #99F6E4;border-radius:9px;padding:6px 12px;margin-left:6px;">
+                                            <div style="font-size:10px;color:#64748B;">Current Grade</div>
+                                            <div style="font-size:20px;font-weight:900;color:@gradeColor;line-height:1;">@existing.GradeLetter</div>
+                                            <div style="font-size:11px;color:#64748B;">@existing.TotalMarks / 100</div>
+                                        </div>
+                                        <!-- Progress bar -->
+                                        <div style="flex:1;min-width:80px;max-width:120px;">
+                                            <div style="height:6px;background:#E2E8F0;border-radius:99px;overflow:hidden;">
+                                                <div style="height:100%;width:@pct.ToString("F0")%;background:@gradeColor;border-radius:99px;transition:.4s;"></div>
+                                            </div>
+                                            <div style="font-size:10px;color:#94A3B8;margin-top:3px;text-align:right;">@pct.ToString("F0")%</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Grade Form -->
+                            <form method="post" action="/Teacher/SaveGrade" id="form-@s.Id">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="studentId" value="@s.Id" />
+                                <input type="hidden" name="studentName" value="@s.Name" />
+                                <input type="hidden" name="courseId" value="@selCourse.Id" />
+                                <input type="hidden" name="courseName" value="@selCourse.Title" />
+                                <input type="hidden" name="semesterNo" value="@selCourse.SemesterNo" />
+
+                                <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:flex-end;">
+                                    <div>
+                                        <label style="font-size:11.5px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">
+                                            📘 Midterm <span style="color:#94A3B8;font-weight:400;">/ <input type="number" name="midTotal" class="form-control" style="width:46px;display:inline;padding:2px 6px;font-size:12px;" value="@(existing?.MidTotal ?? 30)" min="1" max="100" oninput="calcGrade('@s.Id')" /></span>
+                                        </label>
+                                        <input type="number" name="midMarks" class="form-control" style="text-align:center;"
+                                               min="0" max="100" step="0.5" value="@(existing?.MidMarks ?? 0)"
+                                               oninput="calcGrade('@s.Id')" required />
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11.5px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">
+                                            📗 Final <span style="color:#94A3B8;font-weight:400;">/ <input type="number" name="finalTotal" class="form-control" style="width:46px;display:inline;padding:2px 6px;font-size:12px;" value="@(existing?.FinalTotal ?? 50)" min="1" max="100" oninput="calcGrade('@s.Id')" /></span>
+                                        </label>
+                                        <input type="number" name="finalMarks" class="form-control" style="text-align:center;"
+                                               min="0" max="100" step="0.5" value="@(existing?.FinalMarks ?? 0)"
+                                               oninput="calcGrade('@s.Id')" required />
+                                    </div>
+                                    <div>
+                                        <label style="font-size:11.5px;font-weight:700;color:#374151;display:block;margin-bottom:4px;">
+                                            📝 Assignments <span style="color:#94A3B8;font-weight:400;">/ <input type="number" name="assignmentTotal" class="form-control" style="width:46px;display:inline;padding:2px 6px;font-size:12px;" value="@(existing?.AssignmentTotal ?? 20)" min="1" max="100" oninput="calcGrade('@s.Id')" /></span>
+                                        </label>
+                                        <input type="number" name="assignmentMarks" class="form-control" style="text-align:center;"
+                                               min="0" max="100" step="0.5" value="@(existing?.AssignmentMarks ?? 0)"
+                                               oninput="calcGrade('@s.Id')" required />
+                                    </div>
+                                    <div style="text-align:center;">
+                                        <div style="font-size:11px;font-weight:700;color:#64748B;margin-bottom:4px;">Preview</div>
+                                        <div id="preview-@s.Id" style="font-size:15px;font-weight:900;color:#0D9069;background:#CCFBF1;border-radius:8px;padding:8px 12px;">
+                                            @(existing?.GradeLetter ?? "—")
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top:10px;display:flex;gap:10px;align-items:center;">
+                                    <div style="flex:1;">
+                                        <input type="text" name="remarks" class="form-control" style="font-size:12.5px;"
+                                               placeholder="Remarks (optional)" value="@(existing?.Remarks ?? "")" />
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-save-fill"></i> Save Grade
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                }
+            }
+        }
+
+        else
+
+        {
+            <div class="card"><div class="empty-state"><i class="bi bi-arrow-left-circle-fill" style="color:#0D9069;"></i><h4>Select a Course</h4><p>Choose a course from the left to grade students.</p></div></div>
+        }
+    </div>
+</div>
+
+<script>
+    var gradeScale = [
+      [90,'A+'],[85,'A'],[80,'A-'],[75,'B+'],[70,'B'],
+      [65,'B-'],[60,'C+'],[55,'C'],[50,'C-'],[45,'D+'],[40,'D']
+    ];
+
+    function calcGrade(sid){
+      var form=document.getElementById('form-'+sid);
+      if(!form)return;
+      var mid=parseFloat(form.querySelector('[name=midMarks]').value)||0;
+      var midT=parseFloat(form.querySelector('[name=midTotal]').value)||30;
+      var fin=parseFloat(form.querySelector('[name=finalMarks]').value)||0;
+      var finT=parseFloat(form.querySelector('[name=finalTotal]').value)||50;
+      var asgn=parseFloat(form.querySelector('[name=assignmentMarks]').value)||0;
+      var asgnT=parseFloat(form.querySelector('[name=assignmentTotal]').value)||20;
+      var total=mid+fin+asgn;
+      var maxTotal=midT+finT+asgnT;
+      var pct=maxTotal>0?total/maxTotal*100:0;
+      var grade='F';
+      for(var i=0;i<gradeScale.length;i++){
+        if(pct>=gradeScale[i][0]){grade=gradeScale[i][1];break;}
+      }
+      var colors={'A+':'#0D9069','A':'#0D9069','A-':'#1A6FD4','B+':'#1A6FD4','B':'#1A6FD4','B-':'#D97706','C+':'#D97706','C':'#D97706','C-':'#D97706','D+':'#EA580C','D':'#EA580C','F':'#E11D48'};
+      var bgs={'A+':'#CCFBF1','A':'#CCFBF1','A-':'#EFF6FF','B+':'#EFF6FF','B':'#EFF6FF','B-':'#FFFBEB','C+':'#FFFBEB','C':'#FFFBEB','C-':'#FFFBEB','D+':'#FFF7ED','D':'#FFF7ED','F':'#FFF1F2'};
+      var el=document.getElementById('preview-'+sid);
+      if(el){
+        el.textContent=grade+' ('+total.toFixed(1)+'/'+maxTotal+')';
+        el.style.color=colors[grade]||'#E11D48';
+        el.style.background=bgs[grade]||'#FFF1F2';
+      }
+    }
+
+    // Init previews on load
+    document.addEventListener('DOMContentLoaded',function(){
+      document.querySelectorAll('[id^="form-"]').forEach(function(f){
+        var sid=f.id.replace('form-','');
+        calcGrade(sid);
+      });
+    });
+</script>

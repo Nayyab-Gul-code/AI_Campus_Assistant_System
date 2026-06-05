@@ -1,0 +1,127 @@
+@model List<AI_Campus_Assistant.Models.User>
+@{
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+    ViewData["Title"] = "Students";
+    var courses = ViewBag.Courses as List<AI_Campus_Assistant.Models.Course> ?? new();
+    var selCourse = ViewBag.SelectedCourse as AI_Campus_Assistant.Models.Course;
+    var selCourseId = Context.Request.Query["courseId"].ToString();
+}
+
+<div style="display:flex;gap:18px;align-items:start;">
+  <!-- Course Picker -->
+  <div class="card" style="width:230px;flex-shrink:0;">
+    <div class="card-header"><span class="card-title" style="font-size:13px;"><i class="bi bi-book-fill" style="color:#0D9069;margin-right:5px;"></i>My Courses</span></div>
+    <div style="padding:8px;">
+      <a href="/Teacher/Students"
+         style="display:block;padding:9px 12px;border-radius:9px;margin-bottom:3px;text-decoration:none;background:@(string.IsNullOrEmpty(selCourseId)?"#CCFBF1":"transparent");border:1.5px solid @(string.IsNullOrEmpty(selCourseId)?"#0D9069":"transparent");font-size:13px;font-weight:@(string.IsNullOrEmpty(selCourseId)?"800":"600");color:@(string.IsNullOrEmpty(selCourseId)?"#0D9069":"#475569");">
+        <i class="bi bi-people-fill"></i> All Students
+      </a>
+      @foreach (var c in courses)
+      {
+        var isSel = selCourseId == c.Id;
+        <a href="/Teacher/Students?courseId=@c.Id"
+           style="display:block;padding:9px 12px;border-radius:9px;margin-bottom:3px;text-decoration:none;background:@(isSel?"#CCFBF1":"transparent");border:1.5px solid @(isSel?"#0D9069":"transparent");transition:.15s;">
+          <div style="font-size:13px;font-weight:@(isSel?"800":"600");color:@(isSel?"#0D9069":"#0F172A");">@c.Title</div>
+          <div style="font-size:11px;color:#94A3B8;margin-top:1px;">@c.Program · Sem @c.SemesterNo</div>
+        </a>
+      }
+    </div>
+  </div>
+
+  <!-- Student List -->
+  <div style="flex:1;">
+    @if (selCourse != null)
+    {
+      <div style="background:linear-gradient(135deg,#042F2E,#0D9069);border-radius:13px;padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="color:rgba(255,255,255,.6);font-size:11.5px;">Course Students</div>
+          <div style="color:#fff;font-size:16px;font-weight:800;">@selCourse.Title</div>
+          <div style="color:rgba(255,255,255,.5);font-size:12px;">@selCourse.Program · Semester @selCourse.SemesterNo</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="color:rgba(255,255,255,.6);font-size:11px;">Enrolled</div>
+          <div style="color:#fff;font-size:24px;font-weight:900;">@Model.Count</div>
+        </div>
+      </div>
+    }
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="bi bi-people-fill" style="color:#0D9069;margin-right:6px;"></i>
+          @(selCourse != null ? selCourse.Title + " Students" : "All Students") (@Model.Count)
+        </span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Program</th>
+              @if (selCourse != null) { <th>Attendance</th><th>Grade</th><th>Marks</th> }
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach (var s in Model)
+            {
+              var att   = ViewData[$"att_{s.Id}"]   as double? ?? 0;
+              var grade = ViewData[$"grade_{s.Id}"] as string  ?? "N/A";
+              var marks = ViewData[$"marks_{s.Id}"] as double? ?? 0;
+              var attColor = att >= 75 ? "#0D9069" : att >= 60 ? "#D97706" : "#E11D48";
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:36px;height:36px;border-radius:10px;background:#CCFBF1;color:#0D9069;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;">
+                      @(s.Name.Length>0?s.Name[0].ToString().ToUpper():"S")
+                    </div>
+                    <div>
+                      <div style="font-weight:700;font-size:13.5px;">@s.Name</div>
+                      <div style="font-size:11px;color:#94A3B8;">@s.Email</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div style="font-size:13px;font-weight:600;">@(s.Program ?? "—")</div>
+                  <div style="font-size:11px;color:#94A3B8;">Semester @s.SemesterNo</div>
+                </td>
+                @if (selCourse != null)
+                {
+                  <td>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <div style="width:50px;height:6px;background:#E2E8F0;border-radius:99px;overflow:hidden;">
+                        <div style="height:100%;width:@att.ToString("F0")%;background:@attColor;border-radius:99px;"></div>
+                      </div>
+                      <span style="font-size:12.5px;font-weight:700;color:@attColor;">@att.ToString("F0")%</span>
+                    </div>
+                    @if (att < 75)
+                    { <span style="font-size:10px;color:#E11D48;font-weight:700;">⚠ Low</span> }
+                  </td>
+                  <td>
+                    @{
+                      var gc = grade.StartsWith("A")?"#0D9069":grade.StartsWith("B")?"#1A6FD4":grade.StartsWith("C")?"#D97706":grade=="N/A"?"#94A3B8":"#E11D48";
+                    }
+                    <span style="font-size:17px;font-weight:900;color:@gc;">@grade</span>
+                  </td>
+                  <td style="font-size:13.5px;font-weight:700;">@marks.ToString("F0")</td>
+                }
+                <td>
+                  @if(s.IsActive){<span class="badge badge-success">Active</span>}
+                  else{<span class="badge badge-danger">Inactive</span>}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!Model.Any())
+        {
+          <div class="empty-state">
+            <i class="bi bi-people"></i>
+            <h4>No Students Found</h4>
+            <p>@(selCourse != null ? $"No students enrolled in {selCourse.Program} Semester {selCourse.SemesterNo}" : "No students in system")</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/site.js"></script>

@@ -1,0 +1,127 @@
+@model List<AI_Campus_Assistant.Models.Timetable>
+@{
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+    ViewData["Title"] = "My Timetable";
+    var days = new[]{"Monday","Tuesday","Wednesday","Thursday","Friday"};
+    var dayColors = new Dictionary<string,string>{
+        {"Monday","#1A6FD4"},{"Tuesday","#0D9069"},{"Wednesday","#6C63FF"},
+        {"Thursday","#D97706"},{"Friday","#E11D48"}
+    };
+}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+  <div>
+    <h5 style="font-weight:800;margin:0;">My Teaching Schedule</h5>
+    <p style="font-size:12px;color:#64748B;margin:2px 0 0;">Mon–Fri | 8AM–3PM | Friday 1PM–2PM = Juma Break</p>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button onclick="downloadCSV()" class="btn btn-secondary btn-sm">
+      <i class="bi bi-file-earmark-excel-fill" style="color:#0D9069;"></i> Export Excel/CSV
+    </button>
+  </div>
+</div>
+
+@if (!Model.Any())
+{
+  <div class="card">
+    <div class="empty-state">
+      <i class="bi bi-calendar-week"></i>
+      <h4>No Schedule Assigned</h4>
+      <p>Admin has not assigned any classes yet. Contact admin.</p>
+    </div>
+  </div>
+}
+else
+{
+  <!-- Summary Cards -->
+  <div class="stat-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px;">
+    @foreach (var day in days)
+    {
+      var cnt = Model.Count(t => t.DayOfWeek == day);
+      var color = dayColors.ContainsKey(day) ? dayColors[day] : "#94A3B8";
+      <div class="stat-card" style="flex-direction:column;align-items:flex-start;gap:4px;border-top:3px solid @color;">
+        <div style="font-size:12px;font-weight:700;color:@color;">@day</div>
+        <div style="font-size:22px;font-weight:800;color:#0F172A;">@cnt</div>
+        <div style="font-size:11px;color:#94A3B8;">class@(cnt!=1?"es":"")</div>
+      </div>
+    }
+  </div>
+
+  <!-- Timetable by Day -->
+  <div id="ttTable">
+    @foreach (var day in days)
+    {
+      var slots = Model.Where(t => t.DayOfWeek == day).OrderBy(t => t.StartTime).ToList();
+      if (!slots.Any()) continue;
+      var color = dayColors.ContainsKey(day) ? dayColors[day] : "#94A3B8";
+
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-header" style="border-left:4px solid @color;">
+          <span style="font-weight:800;font-size:14px;color:@color;">
+            <i class="bi bi-calendar3" style="margin-right:6px;"></i>@day
+            @if (day == "Friday")
+            { <span style="font-size:11px;background:#FFF1F2;color:#E11D48;padding:2px 8px;border-radius:20px;margin-left:8px;border:1px solid #E11D48;"><i class="bi bi-moon-fill"></i> 1–2 PM Juma Break</span> }
+          </span>
+          <span class="badge badge-info">@slots.Count class@(slots.Count>1?"es":"")</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;padding:14px;">
+          @foreach (var t in slots)
+          {
+            <div style="background:#F8FAFC;border:1.5px solid @color;border-radius:12px;padding:14px;position:relative;overflow:hidden;">
+              <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:@color;"></div>
+              <div style="padding-left:8px;">
+                <div style="font-size:14px;font-weight:800;color:#0F172A;margin-bottom:5px;">@t.CourseName</div>
+                <div style="font-size:11.5px;color:@color;font-weight:700;margin-bottom:4px;">
+                  <i class="bi bi-clock-fill"></i> @t.StartTime – @t.EndTime
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+                  <span style="background:@color;color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;">@t.CourseCode</span>
+                  <span style="background:#F1F5F9;color:#475569;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;">
+                    <i class="bi bi-door-open-fill"></i> @t.Room
+                  </span>
+                  <span style="background:#F1F5F9;color:#475569;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;">
+                    Sem @t.SemesterNo
+                  </span>
+                </div>
+                <div style="font-size:11px;color:#94A3B8;margin-top:6px;">@t.Program</div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Full Table (hidden, for export) -->
+  <table id="exportTable" style="display:none;">
+    <thead><tr><th>Day</th><th>Start Time</th><th>End Time</th><th>Course</th><th>Course Code</th><th>Program</th><th>Semester</th><th>Room</th></tr></thead>
+    <tbody>
+      @foreach (var t in Model.OrderBy(t => t.DayOfWeek).ThenBy(t => t.StartTime))
+      {
+        <tr>
+          <td>@t.DayOfWeek</td><td>@t.StartTime</td><td>@t.EndTime</td>
+          <td>@t.CourseName</td><td>@t.CourseCode</td><td>@t.Program</td>
+          <td>@t.SemesterNo</td><td>@t.Room</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
+
+<script>
+function downloadCSV(){
+  var table=document.getElementById('exportTable');
+  if(!table){alert('No timetable data.');return;}
+  var rows=Array.from(table.querySelectorAll('tr'));
+  var csv=rows.map(function(r){
+    return Array.from(r.querySelectorAll('th,td')).map(function(c){
+      return '"'+(c.textContent.trim().replace(/"/g,'""'))+'"';
+    }).join(',');
+  }).join('\n');
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='MyTimetable.csv';a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
