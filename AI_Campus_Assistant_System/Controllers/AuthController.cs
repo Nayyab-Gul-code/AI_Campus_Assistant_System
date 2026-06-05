@@ -50,9 +50,9 @@ namespace AI_Campus_Assistant.Controllers
 
             return user.Role switch
             {
-                "admin"   => RedirectToAction("Dashboard", "Admin"),
+                "admin" => RedirectToAction("Dashboard", "Admin"),
                 "teacher" => RedirectToAction("Dashboard", "Teacher"),
-                _         => RedirectToAction("Dashboard", "Student")
+                _ => RedirectToAction("Dashboard", "Student")
             };
         }
 
@@ -109,9 +109,9 @@ namespace AI_Campus_Assistant.Controllers
             var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
             return role switch
             {
-                "admin"   => RedirectToAction("Dashboard", "Admin"),
+                "admin" => RedirectToAction("Dashboard", "Admin"),
                 "teacher" => RedirectToAction("Dashboard", "Teacher"),
-                _       => RedirectToAction("Dashboard", "Student")
+                _ => RedirectToAction("Dashboard", "Student")
             };
         }
     }
