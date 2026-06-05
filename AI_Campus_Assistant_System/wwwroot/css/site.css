@@ -1,22 +1,123 @@
-html {
-  font-size: 14px;
+/* ═══════════════════════════════════════════════════════
+   AI Campus — site.css  (shared utility styles)
+═══════════════════════════════════════════════════════ */
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #F1F5F9; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .5; }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+.fade-in    { animation: fadeInUp .35s ease both; }
+.pulse-anim { animation: pulse 2s infinite; }
+
+/* Progress bars */
+.progress {
+  height: 8px;
+  background: #E2E8F0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  border-radius: 99px;
+  transition: width .6s ease;
+}
+.progress-blue   { background: linear-gradient(90deg, #1A6FD4, #60A5FA); }
+.progress-green  { background: linear-gradient(90deg, #0D9069, #34D399); }
+.progress-amber  { background: linear-gradient(90deg, #D97706, #FBBF24); }
+.progress-red    { background: linear-gradient(90deg, #E11D48, #FC8181); }
+.progress-purple { background: linear-gradient(90deg, #6C63FF, #A78BFA); }
+
+/* Avatar placeholder */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border-radius: 10px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.avatar-sm  { width: 32px; height: 32px; font-size: 13px; }
+.avatar-md  { width: 42px; height: 42px; font-size: 16px; }
+.avatar-lg  { width: 60px; height: 60px; font-size: 22px; border-radius: 14px; }
+.avatar-blue   { background: #EFF6FF; color: #1A6FD4; }
+.avatar-green  { background: #ECFDF5; color: #0D9069; }
+.avatar-purple { background: #EDE9FE; color: #6C63FF; }
+.avatar-amber  { background: #FFFBEB; color: #D97706; }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: #94A3B8;
+}
+.empty-state i { font-size: 48px; margin-bottom: 12px; display: block; opacity: .4; }
+.empty-state h4 { font-size: 15px; font-weight: 700; color: #64748B; margin-bottom: 6px; }
+.empty-state p  { font-size: 13px; }
+
+/* Loading spinner */
+.spinner {
+  width: 24px; height: 24px;
+  border: 3px solid #E2E8F0;
+  border-top-color: #1A6FD4;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  display: inline-block;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
+/* Timetable grid colors */
+.tt-monday    { background: #EFF6FF; border-left: 3px solid #1A6FD4; }
+.tt-tuesday   { background: #ECFDF5; border-left: 3px solid #0D9069; }
+.tt-wednesday { background: #EDE9FE; border-left: 3px solid #6C63FF; }
+.tt-thursday  { background: #FFFBEB; border-left: 3px solid #D97706; }
+.tt-friday    { background: #FFF1F2; border-left: 3px solid #E11D48; }
 
-html {
-  position: relative;
-  min-height: 100%;
-}
+/* Grade colors */
+.grade-a  { color: #0D9069; font-weight: 800; }
+.grade-b  { color: #1A6FD4; font-weight: 800; }
+.grade-c  { color: #D97706; font-weight: 800; }
+.grade-d  { color: #EA580C; font-weight: 800; }
+.grade-f  { color: #E11D48; font-weight: 800; }
 
-body {
-  margin-bottom: 60px;
-}
+/* Attendance status colors */
+.att-present { color: #0D9069; }
+.att-absent  { color: #E11D48; }
+.att-late    { color: #D97706; }
+
+/* Utility */
+.text-muted  { color: #94A3B8; }
+.text-sm     { font-size: 12px; }
+.text-xs     { font-size: 11px; }
+.fw-bold     { font-weight: 700; }
+.fw-800      { font-weight: 800; }
+.mt-1  { margin-top: 4px; }
+.mt-2  { margin-top: 8px; }
+.mt-3  { margin-top: 14px; }
+.mt-4  { margin-top: 20px; }
+.mb-1  { margin-bottom: 4px; }
+.mb-2  { margin-bottom: 8px; }
+.mb-3  { margin-bottom: 14px; }
+.mb-4  { margin-bottom: 20px; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 14px; }
+.d-flex { display: flex; }
+.align-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.flex-1 { flex: 1; }
+.w-100 { width: 100%; }
