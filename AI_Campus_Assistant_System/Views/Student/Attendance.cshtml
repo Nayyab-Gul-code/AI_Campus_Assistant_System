@@ -1,0 +1,69 @@
+@* ───────────────────────────────────────────────────────
+   ATTENDANCE
+─────────────────────────────────────────────────────── *@
+@model List<AI_Campus_Assistant.Models.Attendance>
+@{
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+    ViewData["Title"] = "My Attendance";
+    var pct = ViewBag.Percentage as double? ?? 0;
+}
+
+<div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:22px;">
+  <div class="stat-card">
+    <div class="sc-icon" style="background:@(pct>=75?"#ECFDF5":"#FFF1F2");color:@(pct>=75?"#0D9069":"#E11D48");"><i class="bi bi-percent"></i></div>
+    <div>
+      <div class="sc-val" style="color:@(pct>=75?"#0D9069":"#E11D48");">@pct.ToString("F1")%</div>
+      <div class="sc-lbl">Overall</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-green"><i class="bi bi-check-circle-fill"></i></div>
+    <div><div class="sc-val" data-count="@ViewBag.PresentCount">0</div><div class="sc-lbl">Present</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-red"><i class="bi bi-x-circle-fill"></i></div>
+    <div><div class="sc-val" data-count="@ViewBag.AbsentCount">0</div><div class="sc-lbl">Absent</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-amber"><i class="bi bi-clock-fill"></i></div>
+    <div><div class="sc-val" data-count="@ViewBag.LateCount">0</div><div class="sc-lbl">Late</div></div>
+  </div>
+</div>
+
+@if (pct < 75)
+{
+  <div class="alert alert-danger"><i class="bi bi-exclamation-triangle-fill"></i>
+    <strong>Warning:</strong> Your attendance (@pct.ToString("F1")%) is below the required 75%. You may not be allowed to sit in final exams.
+  </div>
+}
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-calendar-check-fill" style="color:#0D9069;margin-right:6px;"></i>Attendance Record</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Course</th><th>Date</th><th>Status</th><th>Remarks</th></tr></thead>
+      <tbody>
+        @foreach (var a in Model)
+        {
+          <tr>
+            <td style="font-weight:600;font-size:13.5px;">@a.CourseName</td>
+            <td style="font-size:13px;">@a.Date.ToString("MMM dd, yyyy")</td>
+            <td>
+              @if(a.Status=="present"){<span class="badge badge-success"><i class="bi bi-check-circle-fill"></i> Present</span>}
+              else if(a.Status=="absent"){<span class="badge badge-danger"><i class="bi bi-x-circle-fill"></i> Absent</span>}
+              else{<span class="badge badge-warning"><i class="bi bi-clock-fill"></i> Late</span>}
+            </td>
+            <td style="font-size:12.5px;color:#94A3B8;">@(a.Remarks ?? "—")</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (!Model.Any())
+    {
+      <div class="empty-state"><i class="bi bi-calendar-x"></i><h4>No Records</h4><p>Attendance records will appear here.</p></div>
+    }
+  </div>
+</div>
+<script src="/js/site.js"></script>
