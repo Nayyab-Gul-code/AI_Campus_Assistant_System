@@ -1,36 +1,70 @@
-namespace AI_Campus_Assistant_System
-{
-    public class Program
+using AI_Campus_Assistant.Data;
+using AI_Campus_Assistant.Models;
+using AI_Campus_Assistant.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// ?? MongoDB Settings ????????????????????????????????????????????????
+builder.Services.Configure<MongoDbSettings>(
+    builder.Configuration.GetSection("MongoDbSettings"));
+
+// ?? Services ????????????????????????????????????????????????????????
+builder.Services.AddSingleton<MongoDbContext>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<MongoDbService>();
+builder.Services.AddScoped<GroqAiService>();
+builder.Services.AddScoped<SeedDataService>();
+builder.Services.AddHttpClient();
+
+// ?? Authentication ??????????????????????????????????????????????????
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
     {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+        options.LoginPath = "/Auth/Login";
+        options.LogoutPath = "/Auth/Logout";
+        options.AccessDeniedPath = "/Auth/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    });
 
-            // Add services to the container.
-            builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews();
+builder.Services.AddSession();
 
-            var app = builder.Build();
+var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
-
-            app.Run();
-        }
+// ?? Seed Data on Startup ????????????????????????????????????????????
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var seed = scope.ServiceProvider.GetRequiredService<SeedDataService>();
+        await seed.SeedAsync();
+        Console.WriteLine("? Database seeded successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"??  Seed error (non-fatal): {ex.Message}");
     }
 }
+
+// ?? Middleware ??????????????????????????????????????????????????????
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+}
+
+app.UseStaticFiles();
+app.UseRouting();
+app.UseSession();
+app.UseAuthentication();
+app.UseAuthorization();
+
+// ?? Routes ??????????????????????????????????????????????????????????
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
+
+app.Run();

@@ -1,0 +1,94 @@
+@model List<AI_Campus_Assistant.Models.Grade>
+@{
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+    ViewData["Title"] = "My Grades";
+    var avg  = Model.Any() ? Model.Average(g => g.TotalMarks) : 0;
+    var best = Model.Any() ? Model.Max(g => g.TotalMarks) : 0;
+}
+
+<div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:22px;">
+  <div class="stat-card">
+    <div class="sc-icon sci-blue"><i class="bi bi-bar-chart-fill"></i></div>
+    <div><div class="sc-val">@avg.ToString("F1")</div><div class="sc-lbl">Average Marks</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-green"><i class="bi bi-trophy-fill"></i></div>
+    <div><div class="sc-val">@best.ToString("F0")</div><div class="sc-lbl">Highest Marks</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-purple"><i class="bi bi-book-fill"></i></div>
+    <div><div class="sc-val" data-count="@Model.Count">0</div><div class="sc-lbl">Total Courses</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-bar-chart-fill" style="color:#1A6FD4;margin-right:6px;"></i>Grade Report</span>
+    <span style="font-size:12px;color:#94A3B8;">Semester-wise performance</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Course</th><th>Mid (40)</th><th>Final (80)</th><th>Assignment (20)</th><th>Total (140)</th><th>Grade</th></tr>
+      </thead>
+      <tbody>
+        @foreach (var g in Model)
+        {
+          var gc   = g.GradeLetter.StartsWith("A")?"#0D9069":g.GradeLetter.StartsWith("B")?"#1A6FD4":g.GradeLetter.StartsWith("C")?"#D97706":"#E11D48";
+          var pct  = (g.TotalMarks / 140.0 * 100);
+          <tr>
+            <td>
+              <div style="font-weight:700;font-size:13.5px;">@g.CourseName</div>
+              <div style="font-size:11px;color:#94A3B8;">Semester @g.SemesterNo</div>
+            </td>
+            <td>
+              <span style="font-weight:600;font-size:13.5px;">@g.MidMarks</span>
+              <div style="height:4px;background:#E2E8F0;border-radius:99px;margin-top:4px;width:60px;">
+                <div style="height:100%;width:@(g.MidMarks/40*100)%;background:#1A6FD4;border-radius:99px;"></div>
+              </div>
+            </td>
+            <td>
+              <span style="font-weight:600;font-size:13.5px;">@g.FinalMarks</span>
+              <div style="height:4px;background:#E2E8F0;border-radius:99px;margin-top:4px;width:60px;">
+                <div style="height:100%;width:@(g.FinalMarks/80*100)%;background:#6C63FF;border-radius:99px;"></div>
+              </div>
+            </td>
+            <td>
+              <span style="font-weight:600;font-size:13.5px;">@g.AssignmentMarks</span>
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="flex:1;height:7px;background:#E2E8F0;border-radius:99px;overflow:hidden;min-width:60px;">
+                  <div style="height:100%;width:@pct.ToString("F0")%;background:@gc;border-radius:99px;"></div>
+                </div>
+                <span style="font-weight:800;font-size:14px;color:#0F172A;">@g.TotalMarks</span>
+              </div>
+            </td>
+            <td>
+              <span style="font-size:18px;font-weight:900;color:@gc;">@g.GradeLetter</span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (!Model.Any())
+    {
+      <div class="empty-state"><i class="bi bi-bar-chart"></i><h4>No Grades Yet</h4><p>Your grades will appear here once your teacher submits them.</p></div>
+    }
+  </div>
+</div>
+
+<!-- Grade Scale Reference -->
+<div class="card" style="margin-top:4px;">
+  <div class="card-header"><span class="card-title"><i class="bi bi-info-circle-fill" style="color:#1A6FD4;margin-right:6px;"></i>Grading Scale</span></div>
+  <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;">
+    @foreach (var (grade, range, color) in new[]{("A","85-100","#0D9069"),("B+","80-84","#1A6FD4"),("B","75-79","#1A6FD4"),("C+","70-74","#D97706"),("C","65-69","#D97706"),("D","60-64","#EA580C"),("F","<60","#E11D48")})
+    {
+      <div style="text-align:center;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 14px;min-width:70px;">
+        <div style="font-size:18px;font-weight:900;color:@color;">@grade</div>
+        <div style="font-size:11px;color:#94A3B8;font-weight:600;">@range</div>
+      </div>
+    }
+  </div>
+</div>
+<script src="/js/site.js"></script>

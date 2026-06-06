@@ -1,0 +1,102 @@
+@model AI_Campus_Assistant.Models.User
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Edit User";
+}
+
+<div style="max-width:680px;">
+  <div style="margin-bottom:16px;">
+    <a href="/Admin/Users" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to Users</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:44px;height:44px;border-radius:12px;background:#EDE9FE;color:#6C63FF;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;">
+          @Model.Name.Substring(0,1).ToUpper()
+        </div>
+        <div>
+          <div class="card-title">Edit: @Model.Name</div>
+          <div style="font-size:12px;color:#94A3B8;">@Model.Email</div>
+        </div>
+      </div>
+      <span class="badge @(Model.Role=="admin"?"badge-purple":Model.Role=="teacher"?"badge-success":"badge-info")">@Model.Role</span>
+    </div>
+    <div class="card-body">
+      <form method="post" action="/Admin/EditUser/@Model.Id">
+        @Html.AntiForgeryToken()
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input type="text" name="Name" class="form-control" value="@Model.Name" required/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <input type="email" name="Email" class="form-control" value="@Model.Email" required/>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" name="Phone" class="form-control" value="@Model.Phone"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Role</label>
+            <select name="Role" class="form-control">
+              <option value="student" @(Model.Role=="student"?"selected":"")>Student</option>
+              <option value="teacher" @(Model.Role=="teacher"?"selected":"")>Teacher</option>
+              <option value="admin"   @(Model.Role=="admin"?"selected":"")>Admin</option>
+            </select>
+          </div>
+        </div>
+
+        @if (Model.Role == "student" || Model.Role == "teacher")
+        {
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Program</label>
+              <select name="Program" class="form-control">
+                <option value="">—</option>
+                @foreach (var p in new[]{"BSCS","BSCE","BSIT","MS CS","MBA"})
+                {
+                  <option value="@p" @(Model.Program==p?"selected":"")>@p</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Semester</label>
+              <select name="SemesterNo" class="form-control">
+                @for(int s=1;s<=8;s++){
+                  <option value="@s" @(Model.SemesterNo==s?"selected":"")>Semester @s</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Designation (Teacher only)</label>
+            <input type="text" name="Designation" class="form-control" value="@Model.Designation" placeholder="Lecturer, Asst. Professor..."/>
+          </div>
+        }
+
+        <div class="form-group">
+          <label class="form-label">Bio</label>
+          <textarea name="Bio" class="form-control" rows="2" style="resize:vertical;">@Model.Bio</textarea>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;color:#374151;font-weight:600;">
+            <input type="checkbox" name="IsActive" value="true" @(Model.IsActive?"checked":"") style="width:16px;height:16px;accent-color:#6C63FF;"/>
+            Account Active
+          </label>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save Changes</button>
+          <a href="/Admin/Users" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

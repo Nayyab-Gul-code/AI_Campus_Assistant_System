@@ -1,0 +1,590 @@
+@* FILE: Views/Admin/StudentResultCard.cshtml *@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    ViewData["Title"] = "Student Result Card";
+
+
+
+    var students = ViewBag.Students as List<AI_Campus_Assistant.Models.User> ?? new();
+
+    var student = ViewBag.Student as AI_Campus_Assistant.Models.User;
+
+    var grades = ViewBag.Grades as List<AI_Campus_Assistant.Models.Grade> ?? new();
+
+    var selStudentId = ViewBag.SelectedStudentId as string ?? "";
+
+    var selSemester = ViewBag.SelectedSemester as int?;
+
+    var allSemesters = ViewBag.AllSemesters as List<int> ?? new();
+
+    var isComplete = (bool)(ViewBag.IsComplete ?? false);
+
+    var totalCourses = (int)(ViewBag.TotalCourses ?? 0);
+
+    var gradedCourses = (int)(ViewBag.GradedCourses ?? 0);
+
+    var sgpa = (double)(ViewBag.SGPA ?? 0.0);
+
+    var obtMarks = (double)(ViewBag.ObtainedMarks ?? 0.0);
+
+    var maxMarks = (double)(ViewBag.TotalMaxMarks ?? 0.0);
+
+    var pctOverall = maxMarks > 0 ? obtMarks / maxMarks * 100 : 0;
+
+
+
+    int passed = grades.Count(g => g.GradeLetter != "F" && g.GradeLetter != "N/A");
+
+    int failed = grades.Count(g => g.GradeLetter == "F");
+
+
+
+    string rmLine = "", rmColor = "", rmIcon = "", rmBg = "";
+
+    if (grades.Any())
+
+    {
+
+        if (sgpa >= 3.5) { rmLine = "Excellent Performance — Outstanding result!"; rmColor = "#0D9069"; rmBg = "#ECFDF5"; rmIcon = "bi-trophy-fill"; }
+
+        else if (sgpa >= 3.0) { rmLine = "Good Performance — Well done, keep it up!"; rmColor = "#1A6FD4"; rmBg = "#EFF6FF"; rmIcon = "bi-star-fill"; }
+
+        else if (sgpa >= 2.5) { rmLine = "Satisfactory Performance — Room to improve."; rmColor = "#D97706"; rmBg = "#FFFBEB"; rmIcon = "bi-graph-up"; }
+
+        else if (sgpa >= 2.0) { rmLine = "Below Average — Extra effort required."; rmColor = "#EA580C"; rmBg = "#FFF7ED"; rmIcon = "bi-exclamation-circle-fill"; }
+
+        else { rmLine = "Poor Performance — Immediate improvement required."; rmColor = "#E11D48"; rmBg = "#FFF1F2"; rmIcon = "bi-x-circle-fill"; }
+
+    }
+
+
+
+    Func<string, string> gc = g =>
+
+        g.StartsWith("A") ? "#0D9069" :
+
+        g.StartsWith("B") ? "#1A6FD4" :
+
+        g.StartsWith("C") ? "#D97706" :
+
+        g.StartsWith("D") ? "#EA580C" : "#E11D48";
+
+
+
+    Func<string, string> subRemark = g =>
+
+        g.StartsWith("A") ? "Excellent" :
+
+        g.StartsWith("B") ? "Good" :
+
+        g.StartsWith("C") ? "Average" :
+
+        g.StartsWith("D") ? "Pass" : "Fail";
+}
+
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --glass-border: rgba(226, 232, 240, 0.8);
+    }
+
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        body, .main-content {
+            background: #fff !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .rc-wrap {
+            box-shadow: none !important;
+            border: 1.5px solid #E2E8F0 !important;
+            border-radius: 16px !important;
+        }
+
+        .rc-head {
+            background: linear-gradient(135deg, #0B1E3E 0%, #0F3060 100%) !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .sig-block {
+            border-top: 1px dashed #CBD5E1 !important;
+        }
+    }
+
+    .rc-wrap {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 24px;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);
+        border: 1px solid var(--glass-border);
+        overflow: hidden;
+    }
+
+    .rc-head {
+        background: radial-gradient(circle at top right, #1E40AF 0%, #0F172A 100%);
+        padding: 40px;
+        color: #fff;
+    }
+
+    .rc-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 30px;
+        padding: 6px 16px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+    }
+
+    .rc-stat {
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        padding: 16px 22px;
+        text-align: center;
+        min-width: 95px;
+        backdrop-filter: blur(8px);
+    }
+
+    .rc-stat-v {
+        font-size: 24px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.5px;
+    }
+
+    .rc-stat-l {
+        font-size: 10px;
+        opacity: 0.7;
+        margin-top: 6px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+    }
+
+    .rc-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .rc-table thead tr {
+            background: #F8FAFC;
+        }
+
+        .rc-table th {
+            padding: 16px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #475569;
+            letter-spacing: .8px;
+            border-bottom: 2px solid #E2E8F0;
+            text-transform: uppercase;
+        }
+
+        .rc-table td {
+            padding: 16px;
+            border-bottom: 1px solid #F1F5F9;
+            font-size: 14px;
+            color: #334155;
+        }
+
+        .rc-table tbody tr:hover {
+            background: #F8FAFF;
+        }
+
+        .rc-table tfoot tr {
+            background: #F8FAFC;
+            border-top: 3px solid #E2E8F0;
+        }
+
+    .g-circle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        background: #FFF;
+        border: 2px solid;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .prog-bar {
+        height: 6px;
+        background: #E2E8F0;
+        border-radius: 99px;
+        overflow: hidden;
+        width: 80px;
+    }
+
+    .prog-fill {
+        height: 100%;
+        border-radius: 99px;
+    }
+
+    .rm-bar {
+        border-radius: 16px;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-weight: 700;
+        font-size: 15px;
+        margin-top: 30px;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .filter-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 4px 30px rgba(15, 23, 42, 0.015);
+        border: 1px solid #E2E8F0;
+        padding: 28px;
+        margin-bottom: 28px;
+    }
+
+    .signatures-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 30px;
+        margin-top: 45px;
+        padding-top: 25px;
+        border-top: 1px solid #E2E8F0;
+    }
+
+    .sig-block {
+        flex: 1;
+        text-align: center;
+        padding: 20px;
+        background: #FAFBFC;
+        border-radius: 14px;
+        border: 1px dashed #CBD5E1;
+    }
+
+    .sig-line {
+        height: 45px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sig-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .sig-subtitle {
+        font-size: 11px;
+        color: #94A3B8;
+        margin-top: 2px;
+    }
+
+    .btn-action {
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 14.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-1px);
+        }
+</style>
+
+<div class="no-print" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <a href="/Admin/Grades" class="btn btn-light" style="border-radius:10px; border:1px solid #E2E8F0; font-weight:600;"><i class="bi bi-arrow-left"></i> Back to Grades</a>
+        <span style="font-weight:800;font-size:20px;color:#0F172A;letter-spacing:-0.5px;">
+            <i class="bi bi-file-earmark-ruled-fill" style="color:#1A6FD4;margin-right:6px;"></i> Transcript Console Engine
+        </span>
+    </div>
+</div>
+
+<div class="filter-card no-print">
+    <div style="font-size:11px;font-weight:800;color:#94A3B8;letter-spacing:1px;margin-bottom:18px;text-transform:uppercase;">
+        STEP 1 — TARGET STUDENT & SEMESTER RUNTIME SELECTOR
+    </div>
+    <form method="get" action="/Admin/StudentResultCard" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="flex:1;min-width:260px;">
+            <label style="font-size:12px;font-weight:700;color:#334155;display:block;margin-bottom:8px;">Search / Select Academic Student</label>
+            <select name="studentId" class="form-control" onchange="this.form.submit()" required style="border-radius:12px;height:45px;border:1px solid #CBD5E1;">
+                <option value="">-- Dropdown Selection List --</option>
+                @foreach (var s in students)
+
+                {
+                    <option value="@s.Id" @(s.Id == selStudentId ? "selected" : "")>
+                        @s.Name — @s.Program
+                    </option>
+                }
+            </select>
+        </div>
+        @if (!string.IsNullOrEmpty(selStudentId) && allSemesters.Any())
+
+        {
+            <div style="min-width:200px;">
+                <label style="font-size:12px;font-weight:700;color:#334155;display:block;margin-bottom:8px;">Execution Semester</label>
+                <select name="semesterNo" class="form-control" onchange="this.form.submit()" style="border-radius:12px;height:45px;border:1px solid #CBD5E1;">
+                    @foreach (var s in allSemesters)
+                    {
+                        <option value="@s" @(selSemester == s ? "selected" : "")>Semester 0@s</option>
+                    }
+                </select>
+            </div>
+        }
+    </form>
+</div>
+
+@if (student != null && grades.Any())
+
+{
+    @if (!isComplete)
+
+    {
+        <div class="no-print" style="background:#FFFBEB;border:1px solid #FCD34D;border-radius:16px; padding:16px 24px;margin-bottom:24px;display:flex;align-items:center;gap:14px;">
+            <i class="bi bi-exclamation-triangle-fill" style="color:#D97706;font-size:22px;"></i>
+            <span style="font-size:14px;color:#92400E;font-weight:600;">
+                <strong>Pending Evaluation Status:</strong> Currently <strong>@gradedCourses of @totalCourses</strong> subjects are mapped. Complete evaluations prior to public release.
+            </span>
+        </div>
+    }
+
+    else
+
+    {
+        <div class="no-print" style="background:#ECFDF5;border:1px solid #6EE7B7;border-radius:16px; padding:16px 24px;margin-bottom:24px;display:flex;align-items:center;gap:14px;">
+            <i class="bi bi-check-circle-fill" style="color:#0D9069;font-size:22px;"></i>
+            <span style="font-size:14px;color:#065F46;font-weight:600;">
+                <strong>Academic Validation Passed:</strong> All <strong>@totalCourses structural courses</strong> have been graded. Ready for compilation deploy.
+            </span>
+        </div>
+    }
+
+    <div class="rc-wrap" id="resultCard">
+        <div class="rc-head">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px;">
+                <div>
+                    <div class="rc-badge"><i class="bi bi-shield-check"></i> Verified Campus Portal Transcript</div>
+                    <h2 id="studentNameLabel" style="font-size:28px;font-weight:800;margin:0 0 6px;letter-spacing:-0.5px;color:#FFF;">@student.Name</h2>
+                    <div style="opacity:.90;font-size:14px;margin-bottom:6px;font-weight:500;letter-spacing:0.2px;">
+                        @student.Program &nbsp;·&nbsp; Roll No: 232201058 &nbsp;·&nbsp; Academic Semester <span id="semesterLabel">@selSemester</span>
+                    </div>
+                    <div style="opacity:.70;font-size:11.5px;font-weight:500;">System Stamp Date: @DateTime.Now.ToString("MMMM dd, yyyy")</div>
+                </div>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <div class="rc-stat"><div class="rc-stat-v">@sgpa.ToString("F2")</div><div class="rc-stat-l">SGPA</div></div>
+                    <div class="rc-stat"><div class="rc-stat-v">@pctOverall.ToString("F0")%</div><div class="rc-stat-l">Score</div></div>
+                    <div class="rc-stat"><div class="rc-stat-v" style="color:#4ADE80;">@passed</div><div class="rc-stat-l">Passed</div></div>
+                    <div class="rc-stat"><div class="rc-stat-v" style="color:#F87171;">@failed</div><div class="rc-stat-l">Failed</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="padding:32px 40px;">
+            <div style="overflow-x:auto;">
+                <table class="rc-table" id="transcriptTable">
+                    <thead>
+                        <tr>
+                            <th style="width:60px;">Index</th>
+                            <th>Subject Name</th>
+                            <th>Subject ID</th>
+                            <th style="text-align:center;">Mid</th>
+                            <th style="text-align:center;">Final</th>
+                            <th style="text-align:center;">Assign</th>
+                            <th style="text-align:center;">Total</th>
+                            <th style="text-align:center;">Grade</th>
+                            <th style="text-align:center;">GPA</th>
+                            <th>Remark Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int sr = 1;
+                        }
+                        @foreach (var g in grades)
+
+                        {
+                            var gColor = gc(g.GradeLetter);
+                            var gRemark = subRemark(g.GradeLetter);
+                            var pct = g.MaxTotal > 0 ? g.TotalMarks / g.MaxTotal * 100 : 0;
+                            <tr>
+                                <td style="color:#94A3B8;font-weight:700;">@sr.ToString("D2")</td>
+                                <td><span style="font-weight:700;color:#0F172A;">@g.CourseName</span></td>
+                                <td><span style="font-size:11.5px;color:#334155;background:#F1F5F9;padding:4px 10px;border-radius:6px;font-weight:700;">@g.CourseId</span></td>
+                                <td style="text-align:center;font-weight:600;">@g.MidMarks</td>
+                                <td style="text-align:center;font-weight:600;">@g.FinalMarks</td>
+                                <td style="text-align:center;font-weight:600;">@g.AssignmentMarks</td>
+                                <td style="text-align:center;">
+                                    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+                                        <span style="font-weight:700;font-size:14px;color:#0F172A;">@g.TotalMarks</span>
+                                        <div class="prog-bar"><div class="prog-fill" style="width:@pct.ToString("F0")%;background:@gColor;"></div></div>
+                                    </div>
+                                </td>
+                                <td style="text-align:center;"><div class="g-circle" style="color:@gColor;border-color:@gColor;">@g.GradeLetter</div></td>
+                                <td style="text-align:center;font-weight:800;color:@gColor;">@g.GPA.ToString("F1")</td>
+                                <td><span class="chip" style="color:@gColor;background:@(gColor+"14");">@gRemark</span></td>
+                            </tr>
+                            sr++;
+
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="padding:18px 16px;font-weight:800;color:#0F172A;font-size:12px;letter-spacing:0.5px;">CONSOLIDATED TOTALS</td>
+                            <td style="text-align:center;font-weight:700;color:#334155;">@grades.Sum(g => g.MidMarks)</td>
+                            <td style="text-align:center;font-weight:700;color:#334155;">@grades.Sum(g => g.FinalMarks)</td>
+                            <td style="text-align:center;font-weight:700;color:#334155;">@grades.Sum(g => g.AssignmentMarks)</td>
+                            <td style="text-align:center;font-weight:800;color:#0F172A;font-size:14px;">@obtMarks.ToString("F0") / @maxMarks.ToString("F0")</td>
+                            <td style="text-align:center;">—</td>
+                            <td style="text-align:center;font-size:16px;color:#1A6FD4;font-weight:900;background:#F8FAFC;border:1px solid #E2E8F0;">@sgpa.ToString("F2")</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="rm-bar" style="background:@rmBg;border:1px solid @(rmColor+"25");color:@rmColor;">
+                <i class="bi @rmIcon" style="font-size:24px;"></i>
+                <div>
+                    <div style="font-size:15px;font-weight:700;letter-spacing:-0.2px;">@rmLine</div>
+                </div>
+            </div>
+
+            <div class="signatures-container">
+                <div class="sig-block">
+                    <div class="sig-line">
+                        <span style="font-family:'Courier New', monospace; opacity:0.6; font-size:12px;">[Digital Verification]</span>
+                    </div>
+                    <div class="sig-title">Prepared By</div>
+                    <div class="sig-subtitle">Academic Coordinator</div>
+                </div>
+                <div class="sig-block">
+                    <div class="sig-line">
+                        <i class="bi bi-shield-check-fill" style="color:#0D9069; font-size:20px;"></i>
+                    </div>
+                    <div class="sig-title">Verified Officer</div>
+                    <div class="sig-subtitle">Examination Branch</div>
+                </div>
+                <div class="sig-block">
+                    <div class="sig-line"></div>
+                    <div class="sig-title">Controller of Examinations</div>
+                    <div class="sig-subtitle">Official Stamp Sign</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="no-print" style="display:flex;gap:14px;margin-top:28px;justify-content:flex-end;align-items:center;">
+        @* Button 1: Print / PDF *@
+        <button onclick="window.print()" class="btn-action" style="background:#FFFFFF; border:1.5px solid #CBD5E1; color:#334155;">
+            <i class="bi bi-printer-fill" style="color:#64748B;"></i> Print / PDF Document
+        </button>
+
+        @* Button 2: Excel / CSV Real Working Download *@
+        <button onclick="downloadCSV()" class="btn-action" style="background:#FFFFFF; border:1.5px solid #0D9069; color:#0D9069;">
+            <i class="bi bi-file-earmark-excel-fill"></i> Download Ledger Data
+        </button>
+
+        @* Button 3: Generate & Release Trigger *@
+        @if (isComplete)
+
+        {
+            <form method="post" action="/Admin/GenerateResultCard" style="display:inline;margin:0;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="studentId" value="@student.Id" />
+                <input type="hidden" name="semesterNo" value="@selSemester" />
+                <button type="submit" class="btn-action" style="background:linear-gradient(135deg, #1A6FD4 0%, #1256A8 100%); color:#FFF; box-shadow:0 4px 12px rgba(26,111,212,0.25);">
+                    <i class="bi bi-file-earmark-check-fill"></i> Generate & Release Card
+                </button>
+            </form>
+        }
+
+        else
+
+        {
+            <button class="btn-action" disabled style="background:#E2E8F0; color:#94A3B8; cursor:not-allowed;">
+                <i class="bi bi-lock-fill"></i> Locked (@gradedCourses/@totalCourses Graded)
+            </button>
+        }
+    </div>
+}
+
+@* Client Side JavaScript Engine for Data Export *@
+<script>
+    function downloadCSV() {
+        var table = document.getElementById("transcriptTable");
+        var rows = table.querySelectorAll("tr");
+        var csvData = [];
+
+        // Add Meta Information Header in CSV
+        var studentName = document.getElementById("studentNameLabel")?.innerText || "Student";
+        var semesterNo = document.getElementById("semesterLabel")?.innerText || "0";
+        csvData.push("Official Campus Transcript Ledger Sheet");
+        csvData.push("Student Name:," + studentName);
+        csvData.push("Semester:," + semesterNo);
+        csvData.push(""); // Empty Spacer row
+
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            var cols = row.querySelectorAll("th, td");
+            var rowData = [];
+
+            for (var j = 0; j < cols.length; j++) {
+                // Read text value and clear unnecessary spacing/line breaks
+                var cleanText = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, " ").trim();
+                // Escape inner quotation marks for CSV format integrity
+                cleanText = cleanText.replace(/"/g, '""');
+                rowData.push('"' + cleanText + '"');
+            }
+            csvData.push(rowData.join(","));
+        }
+
+        var csvString = csvData.join("\n");
+        var blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement("a");
+
+        var fileName = studentName.replace(/\s+/g, '_') + "_Semester_" + semesterNo + "_Transcript.csv";
+
+        if (navigator.msSaveBlob) {
+            navigator.msSaveBlob(blob, fileName);
+        } else {
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+</script>

@@ -1,0 +1,65 @@
+@model List<AI_Campus_Assistant.Models.Grade>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Results / Grades";
+}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+  <div>
+    <h5 style="font-weight:800;margin:0;">All Student Results</h5>
+    <p style="color:#94A3B8;font-size:12px;margin:2px 0 0;">Read-only — Teachers assign grades</p>
+  </div>
+  <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;">
+    <select name="program" class="form-control" style="width:140px;" onchange="this.form.submit()">
+      <option value="">All Programs</option>
+      @foreach(var p in new[]{"BSCS","BSIT","BBA","MCS","MIT","MBA"})
+      {<option value="@p" @(ViewBag.FilterProgram==p?"selected":"")>@p</option>}
+    </select>
+    <select name="semNo" class="form-control" style="width:140px;" onchange="this.form.submit()">
+      <option value="">All Semesters</option>
+      @for(int i=1;i<=8;i++)
+      {<option value="@i" @(ViewBag.FilterSem?.ToString()==i.ToString()?"selected":"")>Semester @i</option>}
+    </select>
+    <a href="/Admin/Grades" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-counterclockwise"></i></a>
+  </form>
+</div>
+
+<div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
+  <div class="stat-card"><div class="sc-icon sci-blue"><i class="bi bi-people-fill"></i></div><div><div class="sc-val" data-count="@Model.Count">0</div><div class="sc-lbl">Total Records</div></div></div>
+  <div class="stat-card"><div class="sc-icon sci-green"><i class="bi bi-trophy-fill"></i></div><div><div class="sc-val">@(Model.Any()?Model.Average(g=>g.TotalMarks).ToString("F1"):"0")</div><div class="sc-lbl">Average Total</div></div></div>
+  <div class="stat-card"><div class="sc-icon sci-amber"><i class="bi bi-award-fill"></i></div><div><div class="sc-val" data-count="@Model.Count(g=>g.GradeLetter.StartsWith("A"))">0</div><div class="sc-lbl">A Grade Students</div></div></div>
+  <div class="stat-card"><div class="sc-icon sci-red"><i class="bi bi-x-circle-fill"></i></div><div><div class="sc-val" data-count="@Model.Count(g=>g.GradeLetter=="F")">0</div><div class="sc-lbl">Failed Students</div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-bar-chart-fill" style="color:#6C63FF;margin-right:6px;"></i>Grade Records (@Model.Count)</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Student</th><th>Course</th><th>Mid (40)</th><th>Final (60)</th><th>Assign (20)</th><th>Total (120)</th><th>Grade</th><th>Semester</th></tr></thead>
+      <tbody>
+        @foreach(var g in Model.OrderBy(g=>g.CourseName).ThenByDescending(g=>g.TotalMarks))
+        {
+          var gc=g.GradeLetter.StartsWith("A")?"#0D9069":g.GradeLetter.StartsWith("B")?"#1A6FD4":g.GradeLetter.StartsWith("C")?"#D97706":"#E11D48";
+          var pct=g.TotalMarks/120.0*100;
+          <tr>
+            <td><div style="font-weight:700;font-size:13px;">@g.StudentName</div><div style="font-size:11px;color:#94A3B8;">@g.StudentId.Substring(Math.Max(0,g.StudentId.Length-6))</div></td>
+            <td style="font-size:13px;font-weight:600;">@g.CourseName</td>
+            <td>@g.MidMarks</td><td>@g.FinalMarks</td><td>@g.AssignmentMarks</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="width:50px;height:6px;background:#E2E8F0;border-radius:99px;overflow:hidden;">
+                  <div style="height:100%;width:@pct.ToString("F0")%;background:@gc;border-radius:99px;"></div>
+                </div>
+                <strong style="font-size:13.5px;">@g.TotalMarks</strong>
+              </div>
+            </td>
+            <td><span style="font-size:18px;font-weight:900;color:@gc;">@g.GradeLetter</span></td>
+            <td><span class="badge badge-info">Sem @g.SemesterNo</span></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if(!Model.Any()){<div class="empty-state"><i class="bi bi-bar-chart"></i><h4>No Results Found</h4><p>Teachers will add grades from their panel.</p></div>}
+  </div>
+</div>

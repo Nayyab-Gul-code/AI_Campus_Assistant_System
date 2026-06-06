@@ -1,0 +1,120 @@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="sc-icon sci-blue"><i class="bi bi-mortarboard-fill"></i></div>
+    <div><div class="sc-val" data-count="@ViewBag.TotalStudents">0</div><div class="sc-lbl">Total Students</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-green"><i class="bi bi-person-workspace"></i></div>
+    <div><div class="sc-val" data-count="@ViewBag.TotalTeachers">0</div><div class="sc-lbl">Teachers</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-purple"><i class="bi bi-book-fill"></i></div>
+    <div><div class="sc-val" data-count="@ViewBag.TotalCourses">0</div><div class="sc-lbl">Courses</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-amber"><i class="bi bi-building"></i></div>
+    <div><div class="sc-val" data-count="@ViewBag.TotalDepts">0</div><div class="sc-lbl">Departments</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon sci-red"><i class="bi bi-robot"></i></div>
+    <div><div class="sc-val" data-count="@ViewBag.TodayChats">0</div><div class="sc-lbl">AI Chats Today</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon" style="background:#FFF1F2;color:#E11D48;"><i class="bi bi-chat-square-text-fill"></i></div>
+    <div><div class="sc-val" data-count="@ViewBag.PendingComplaints">0</div><div class="sc-lbl">Pending Complaints</div></div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+
+  <!-- Recent Users -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="bi bi-people-fill" style="color:#6C63FF;margin-right:6px;"></i>Recent Users</span>
+      <a href="/Admin/Users" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Role</th><th>Status</th></tr></thead>
+        <tbody>
+          @if (ViewBag.RecentUsers != null)
+          {
+            foreach (var u in ViewBag.RecentUsers)
+            {
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:9px;">
+                    <div style="width:32px;height:32px;border-radius:9px;background:#EDE9FE;color:#6C63FF;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;">
+                      @u.Name.Substring(0,1).ToUpper()
+                    </div>
+                    <div>
+                      <div style="font-weight:600;font-size:13.5px;">@u.Name</div>
+                      <div style="font-size:11px;color:#94A3B8;">@u.Email</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  @if (u.Role == "admin")   { <span class="badge badge-purple">Admin</span> }
+                  else if (u.Role == "teacher") { <span class="badge badge-success">Teacher</span> }
+                  else { <span class="badge badge-info">Student</span> }
+                </td>
+                <td>
+                  @if (u.IsActive) { <span class="badge badge-success">Active</span> }
+                  else { <span class="badge badge-danger">Inactive</span> }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recent Notifications -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><i class="bi bi-bell-fill" style="color:#D97706;margin-right:6px;"></i>Recent Notifications</span>
+      <a href="/Admin/Notifications" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+      @if (ViewBag.Notifications != null)
+      {
+        foreach (var n in ViewBag.Notifications)
+        {
+          var ic = n.Type == "success" ? "check-circle-fill" : n.Type == "warning" ? "exclamation-triangle-fill" : n.Type == "danger" ? "x-circle-fill" : "info-circle-fill";
+          var cl = n.Type == "success" ? "#0D9069" : n.Type == "warning" ? "#D97706" : n.Type == "danger" ? "#E11D48" : "#1A6FD4";
+          <div style="padding:12px 18px;border-bottom:1px solid #F1F5F9;display:flex;align-items:flex-start;gap:10px;">
+            <i class="bi bi-@ic" style="color:@cl;font-size:15px;margin-top:1px;flex-shrink:0;"></i>
+            <div>
+              <div style="font-size:13.5px;font-weight:600;color:#0F172A;">@n.Title</div>
+              <div style="font-size:11.5px;color:#94A3B8;">@n.CreatedAt.ToString("MMM dd, yyyy")</div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+</div>
+
+<!-- Quick Actions -->
+<div class="card" style="margin-top:18px;">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-lightning-fill" style="color:#D97706;margin-right:6px;"></i>Quick Actions</span>
+  </div>
+  <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap;">
+    <a href="/Admin/CreateUser"   class="btn btn-primary"><i class="bi bi-person-plus-fill"></i> Add User</a>
+    <a href="/Admin/CreateCourse" class="btn btn-success"><i class="bi bi-plus-circle-fill"></i> Add Course</a>
+    <a href="/Admin/Departments"  class="btn btn-secondary"><i class="bi bi-building"></i> Departments</a>
+    <a href="/Admin/Notifications" class="btn btn-secondary"><i class="bi bi-bell-fill"></i> Send Notification</a>
+    <a href="/Admin/Complaints"   class="btn btn-secondary"><i class="bi bi-chat-square-text-fill"></i> View Complaints</a>
+    <a href="/Admin/AiMonitor"    class="btn btn-secondary"><i class="bi bi-robot"></i> AI Monitor</a>
+  </div>
+</div>
+
+<script src="/js/site.js"></script>

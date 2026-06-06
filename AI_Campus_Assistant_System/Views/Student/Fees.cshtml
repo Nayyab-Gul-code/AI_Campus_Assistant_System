@@ -1,0 +1,319 @@
+@model List<AI_Campus_Assistant.Models.Fee>
+@{
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+
+    ViewData["Title"] = "Fee Status";
+
+    var user = ViewBag.User as AI_Campus_Assistant.Models.User;
+
+    double totalDue = ViewBag.TotalDue ?? 0;
+
+    double totalPaid = ViewBag.TotalPaid ?? 0;
+
+    var existingRequest = ViewBag.ExistingRequest as AI_Campus_Assistant.Models.FeeRequest;
+}
+
+<!-- Stats -->
+<div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(175px,1fr));margin-bottom:22px;">
+    <div class="stat-card">
+        <div class="sc-icon sci-blue"><i class="bi bi-receipt"></i></div>
+        <div><div class="sc-val" data-count="@Model.Count">0</div><div class="sc-lbl">Total Challans</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="sc-icon sci-green"><i class="bi bi-check-circle-fill"></i></div>
+        <div><div class="sc-val" style="font-size:18px;">PKR @totalPaid.ToString("N0")</div><div class="sc-lbl">Total Paid</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="sc-icon sci-red"><i class="bi bi-exclamation-circle-fill"></i></div>
+        <div><div class="sc-val" style="font-size:18px;">PKR @totalDue.ToString("N0")</div><div class="sc-lbl">Total Due</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="sc-icon sci-amber"><i class="bi bi-hourglass-split"></i></div>
+        <div><div class="sc-val" data-count="@Model.Count(f => f.Status == "Pending Verification")">0</div><div class="sc-lbl">Under Review</div></div>
+    </div>
+</div>
+
+<!-- Step 1: Student submits fee preferences if no fee yet -->
+@if (!Model.Any() || (existingRequest == null && Model.All(f => f.Status == "Paid")))
+
+{
+    <div class="card" style="margin-bottom:20px;border:2px solid #BFDBFE;">
+        <div class="card-header" style="background:#EFF6FF;">
+            <span class="card-title" style="color:#1A6FD4;">
+                <i class="bi bi-send-fill" style="margin-right:7px;"></i>
+                Step 1 — Submit Your Fee Preferences
+            </span>
+        </div>
+        <div class="card-body">
+            <p style="font-size:13.5px;color:#374151;margin-bottom:18px;">
+                Select the services you need. Admin will generate your fee challan based on your selection.
+            </p>
+            <form method="post" action="/Student/SubmitFeeRequest">
+                @Html.AntiForgeryToken()
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+                    <!-- Transport card -->
+                    <label style="border:2px solid #E2E8F0;border-radius:12px;padding:16px;cursor:pointer;display:flex;align-items:flex-start;gap:12px;transition:.18s;"
+                           id="transportCard">
+                        <input type="checkbox" name="wantsTransport" value="true" id="chkTransport"
+                               style="width:18px;height:18px;margin-top:2px;accent-color:#1A6FD4;"
+                               onchange="highlightCard('transportCard',this)" />
+                        <div>
+                            <div style="font-size:15px;margin-bottom:3px;">🚌</div>
+                            <div style="font-weight:700;font-size:13.5px;color:#0F172A;">University Transport</div>
+                            <div style="font-size:12px;color:#64748B;margin-top:2px;">Daily pickup & drop service</div>
+                            <div style="font-size:12px;font-weight:700;color:#1A6FD4;margin-top:4px;">~PKR 3,000/sem</div>
+                        </div>
+                    </label>
+                    <!-- Hostel card -->
+                    <label style="border:2px solid #E2E8F0;border-radius:12px;padding:16px;cursor:pointer;display:flex;align-items:flex-start;gap:12px;transition:.18s;"
+                           id="hostelCard">
+                        <input type="checkbox" name="wantsHostel" value="true" id="chkHostel"
+                               style="width:18px;height:18px;margin-top:2px;accent-color:#6C63FF;"
+                               onchange="highlightCard('hostelCard',this)" />
+                        <div>
+                            <div style="font-size:15px;margin-bottom:3px;">🏠</div>
+                            <div style="font-weight:700;font-size:13.5px;color:#0F172A;">Hostel Accommodation</div>
+                            <div style="font-size:12px;color:#64748B;margin-top:2px;">On-campus residential facility</div>
+                            <div style="font-size:12px;font-weight:700;color:#6C63FF;margin-top:4px;">~PKR 8,000/sem</div>
+                        </div>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Additional Note (optional)</label>
+                    <textarea name="note" class="form-control" rows="2"
+                              placeholder="Any special request or message for admin..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top:4px;">
+                    <i class="bi bi-send-fill"></i> Submit Fee Request to Admin
+                </button>
+            </form>
+        </div>
+    </div>
+}
+
+<!-- Pending request banner -->
+@if (existingRequest != null)
+
+{
+    <div class="alert alert-info" style="margin-bottom:18px;">
+        <i class="bi bi-hourglass-split"></i>
+        <div>
+            <strong>Fee request submitted!</strong> Admin is processing your challan.
+            <div style="font-size:12px;margin-top:3px;">
+                Submitted: @existingRequest.CreatedAt.ToString("dd MMM yyyy, hh:mm tt") &nbsp;|&nbsp;
+                Transport: <strong>@(existingRequest.WantsTransport ? "Yes" : "No")</strong> &nbsp;|&nbsp;
+                Hostel: <strong>@(existingRequest.WantsHostel ? "Yes" : "No")</strong>
+                @if (!string.IsNullOrEmpty(existingRequest.StudentNote))
+
+                {
+                    <text> &nbsp;|&nbsp; Note: "@existingRequest.StudentNote"</text>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Alerts -->
+@if (Model.Any(f => f.Status == "Pending Verification"))
+
+{
+    <div class="alert alert-info" style="margin-bottom:18px;">
+        <i class="bi bi-hourglass-split"></i>
+        <strong>@Model.Count(f => f.Status == "Pending Verification")</strong> payment(s) under admin review.
+    </div>
+}
+@if (totalDue > 0 && Model.Any(f => f.Status == "Unpaid"))
+
+{
+    <div class="alert alert-danger" style="margin-bottom:18px;">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        Outstanding dues: <strong>PKR @totalDue.ToString("N0")</strong>.
+        Download your challan, pay at bank, then upload proof below.
+    </div>
+}
+
+<!-- Fee Challans Table -->
+@if (Model.Any())
+
+{
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">
+                <i class="bi bi-receipt" style="color:#6C63FF;margin-right:6px;"></i>
+                My Fee Challans
+            </span>
+            <span class="badge badge-info">
+                @Model.Count(f => f.Status == "Paid") paid &middot;
+                @Model.Count(f => f.Status == "Pending Verification") pending &middot;
+                @Model.Count(f => f.Status == "Unpaid") unpaid
+            </span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Challan No.</th>
+                        <th>Program</th>
+                        <th>Tuition</th>
+                        <th>Library</th>
+                        <th>Transport</th>
+                        <th>Hostel</th>
+                        <th>Total</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var f in Model)
+                    {
+
+                        var overdue = f.Status == "Unpaid" && f.DueDate < DateTime.Today;
+                        <tr>
+                            <td>
+                                <span style="font-size:11px;font-weight:800;color:#6C63FF;font-family:monospace;">@f.FeeId</span>
+                            </td>
+                            <td>
+                                <div style="font-weight:700;font-size:13px;">@f.Program</div>
+                                <div style="font-size:11px;color:#94A3B8;">Sem @f.SemesterNo</div>
+                            </td>
+                            <td>PKR @f.TuitionFee.ToString("N0")</td>
+                            <td>PKR @f.LibraryFee.ToString("N0")</td>
+                            <td>
+                                @if (f.HasTransport)
+                                {
+                                    <span class="badge badge-info">PKR @f.TransportFee.ToString("N0")</span>
+                                }
+
+                                else
+                                {
+                                    <span style="color:#CBD5E1;">—</span>
+                                }
+                            </td>
+                            <td>
+                                @if (f.HasHostel)
+                                {
+                                    <span class="badge badge-purple">PKR @f.HostelFee.ToString("N0")</span>
+                                }
+
+                                else
+                                {
+                                    <span style="color:#CBD5E1;">—</span>
+                                }
+                            </td>
+                            <td><strong>PKR @f.TotalFee.ToString("N0")</strong></td>
+                            <td style="@(overdue ? "color:#E11D48;font-weight:700;" : "")font-size:12px;">
+                                @f.DueDate.ToString("dd MMM yyyy")
+                                @if (overdue)
+                                {
+                                    <span class="badge badge-danger" style="font-size:10px;margin-left:3px;">Overdue</span>
+                                }
+                            </td>
+                            <td>
+                                @if (f.Status == "Paid")
+
+                                {
+                                    <span class="badge badge-success"><i class="bi bi-check-circle-fill"></i> Paid</span>
+                                    if (f.PaidAt.HasValue)
+                                    {
+                                        <div style="font-size:10px;color:#94A3B8;margin-top:2px;">@f.PaidAt.Value.ToString("dd MMM yyyy")</div>
+                                    }
+
+                                }
+
+                                else if (f.Status == "Pending Verification")
+
+                                {
+                                    <span class="badge badge-warning"><i class="bi bi-hourglass-split"></i> Under Review</span>
+                                    if (f.ProofSubmittedAt.HasValue)
+                                    {
+                                        <div style="font-size:10px;color:#94A3B8;margin-top:2px;">@f.ProofSubmittedAt.Value.ToString("dd MMM yyyy")</div>
+                                    }
+
+                                }
+
+                                else
+
+                                {
+                                    <span class="badge badge-danger"><i class="bi bi-clock-fill"></i> Unpaid</span>
+                                }
+                            </td>
+                            <td>
+                                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                                    <!-- Download Challan -->
+                                    <a href="/Student/FeeChallan/@f.Id" target="_blank"
+                                       class="btn btn-secondary btn-sm" title="View & Download Challan">
+                                        <i class="bi bi-download"></i> Challan
+                                    </a>
+                                    <!-- Upload Proof (only Unpaid) -->
+                                    @if (f.Status == "Unpaid")
+
+                                    {
+                                        <button onclick="openModal('proofModal_@f.Id')"
+                                                class="btn btn-primary btn-sm">
+                                            <i class="bi bi-upload"></i> Upload Proof
+                                        </button>
+                                    }
+
+                                    else if (f.Status == "Pending Verification")
+
+                                    {
+                                        <span style="font-size:11px;color:#D97706;font-weight:600;">
+                                            <i class="bi bi-clock"></i> Awaiting
+                                        </span>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<!-- Proof Upload Modals -->
+@foreach (var f in Model.Where(f => f.Status == "Unpaid"))
+
+{
+    <div class="modal-backdrop" id="proofModal_@f.Id">
+        <div class="modal">
+            <div class="modal-title">
+                <i class="bi bi-upload" style="color:#1A6FD4;margin-right:8px;"></i>Upload Payment Proof
+            </div>
+            <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:9px;padding:12px;margin-bottom:16px;">
+                <div style="font-size:13px;font-weight:700;color:#0F172A;">@f.FeeId</div>
+                <div style="font-size:12px;color:#64748B;margin-top:3px;">
+                    @f.Program — Sem @f.SemesterNo &nbsp;|&nbsp; Due: @f.DueDate.ToString("dd MMM yyyy")
+                    &nbsp;|&nbsp; <strong style="color:#E11D48;">PKR @f.TotalFee.ToString("N0")</strong>
+                </div>
+            </div>
+            <form method="post" action="/Student/SubmitPaymentProof" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="feeId" value="@f.Id" />
+                <div class="form-group">
+                    <label class="form-label">Bank Receipt / Payment Screenshot *</label>
+                    <input type="file" name="proofFile" class="form-control"
+                           accept=".pdf,.jpg,.jpeg,.png" required />
+                    <div style="font-size:11px;color:#94A3B8;margin-top:4px;">
+                        Accepted: PDF, JPG, PNG — Max 5 MB
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal('proofModal_@f.Id')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> Submit Proof
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<script>
+    function highlightCard(cardId, checkbox) {
+        var card = document.getElementById(cardId);
+        card.style.borderColor = checkbox.checked ? '#1A6FD4' : '#E2E8F0';
+        card.style.background = checkbox.checked ? '#EFF6FF' : '#fff';
+    }
+</script>

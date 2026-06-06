@@ -1,0 +1,95 @@
+@model List<AI_Campus_Assistant.Models.User>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Users";
+}
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+  <div style="display:flex;gap:8px;">
+    <a href="/Admin/Users" class="btn @(ViewBag.Filter==null?"btn-primary":"btn-secondary") btn-sm">All</a>
+    <a href="/Admin/Users?role=student" class="btn @(ViewBag.Filter=="student"?"btn-primary":"btn-secondary") btn-sm">Students</a>
+    <a href="/Admin/Users?role=teacher" class="btn @(ViewBag.Filter=="teacher"?"btn-primary":"btn-secondary") btn-sm">Teachers</a>
+    <a href="/Admin/Users?role=admin"   class="btn @(ViewBag.Filter=="admin"?"btn-primary":"btn-secondary") btn-sm">Admins</a>
+  </div>
+  <a href="/Admin/CreateUser" class="btn btn-primary"><i class="bi bi-person-plus-fill"></i> Add User</a>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><i class="bi bi-people-fill" style="color:#6C63FF;margin-right:6px;"></i>
+      All Users (@Model.Count)
+    </span>
+    <form method="get" action="/Admin/Users" style="display:flex;gap:8px;">
+      <input name="search" value="@ViewBag.Search" placeholder="Search name or email..." class="form-control" style="width:220px;padding:7px 12px;font-size:13px;"/>
+      <input type="hidden" name="role" value="@ViewBag.Filter"/>
+      <button type="submit" class="btn btn-secondary btn-sm"><i class="bi bi-search"></i></button>
+    </form>
+  </div>
+  <div class="table-wrap">
+    <table id="usersTable">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Role</th>
+          <th>Program / Designation</th>
+          <th>Phone</th>
+          <th>Joined</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach (var u in Model)
+        {
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;border-radius:10px;background:@(u.Role=="admin"?"#EDE9FE":u.Role=="teacher"?"#CCFBF1":"#EFF6FF");color:@(u.Role=="admin"?"#6C63FF":u.Role=="teacher"?"#0D9069":"#1A6FD4");display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;">
+                  @u.Name.Substring(0,1).ToUpper()
+                </div>
+                <div>
+                  <div style="font-weight:700;font-size:13.5px;">@u.Name</div>
+                  <div style="font-size:11px;color:#94A3B8;">@u.Email</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              @if (u.Role == "admin")   { <span class="badge badge-purple">Admin</span> }
+              else if (u.Role == "teacher") { <span class="badge badge-success">Teacher</span> }
+              else { <span class="badge badge-info">Student</span> }
+            </td>
+            <td style="font-size:13px;color:#475569;">
+              @(string.IsNullOrEmpty(u.Program) ? (u.Designation ?? "—") : $"{u.Program} – Sem {u.SemesterNo}")
+            </td>
+            <td style="font-size:13px;color:#475569;">@(u.Phone ?? "—")</td>
+            <td style="font-size:12px;color:#94A3B8;">@u.CreatedAt.ToString("MMM dd, yyyy")</td>
+            <td>
+              @if (u.IsActive) { <span class="badge badge-success">Active</span> }
+              else { <span class="badge badge-danger">Inactive</span> }
+            </td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                <a href="/Admin/EditUser/@u.Id" class="btn btn-secondary btn-sm"><i class="bi bi-pencil-fill"></i></a>
+                @if (u.Role != "admin")
+                {
+                  <form id="del-@u.Id" method="post" action="/Admin/DeleteUser/@u.Id" style="display:inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="button" class="btn btn-danger btn-sm"
+                            onclick="confirmDelete('del-@u.Id','@u.Name')">
+                      <i class="bi bi-trash-fill"></i>
+                    </button>
+                  </form>
+                }
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (!Model.Any())
+    {
+      <div class="empty-state"><i class="bi bi-people"></i><h4>No Users Found</h4><p>Add users or adjust your filter.</p></div>
+    }
+  </div>
+</div>
+<script src="/js/site.js"></script>
